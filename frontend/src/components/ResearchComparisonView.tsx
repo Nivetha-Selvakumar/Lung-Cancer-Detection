@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResearchModelResult } from '../types/api';
-import { FlaskConical, GitFork, Dna } from 'lucide-react';
+import { FlaskConical, Activity, Layers } from 'lucide-react';
 
 interface ResearchComparisonViewProps {
   researchModels?: {
@@ -21,20 +21,20 @@ export const ResearchComparisonView: React.FC<ResearchComparisonViewProps> = ({ 
     const maligPct = Malignant > 1 ? Malignant : Malignant * 100;
     const confPct = modelData.confidence > 1 ? modelData.confidence : modelData.confidence * 100;
 
-    const isXGB = key === 'xgboost';
-    const title = isXGB ? 'XGBoost Machine Learning' : 'Genetic Programming (Symbolic AI)';
-    const Icon = isXGB ? GitFork : Dna;
+    const isFirst = key === 'xgboost';
+    const title = isFirst ? 'Auxiliary Diagnostic Analysis 1' : 'Auxiliary Diagnostic Analysis 2';
+    const Icon = isFirst ? Activity : Layers;
 
     return (
       <div className="card" style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Research Model • {isXGB ? 'Classifier 1' : 'Classifier 2'}
+              Secondary Check • {isFirst ? 'Feature Analysis' : 'Symbolic Pattern Check'}
             </span>
             <h4 style={{ margin: 0, fontSize: '1rem', color: '#e2e8f0' }}>{title}</h4>
           </div>
-          <Icon size={20} style={{ color: isXGB ? 'var(--primary-blue)' : 'var(--accent-purple)' }} />
+          <Icon size={20} style={{ color: isFirst ? 'var(--primary-blue)' : 'var(--accent-purple)' }} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.75rem' }}>
@@ -97,7 +97,7 @@ export const ResearchComparisonView: React.FC<ResearchComparisonViewProps> = ({ 
       }}>
         <FlaskConical size={18} style={{ color: 'var(--accent-purple)' }} />
         <div>
-          <strong style={{ color: '#e2e8f0' }}>Research & Benchmark Comparison Models:</strong> XGBoost and Genetic Programming models are displayed for research benchmarking only. They are NOT used in the final user prediction flow or for ensemble consensus.
+          <strong style={{ color: '#e2e8f0' }}>Secondary Diagnostic Verification:</strong> Secondary analytical checks provide cross-reference probability validation for attending physicians.
         </div>
       </div>
 

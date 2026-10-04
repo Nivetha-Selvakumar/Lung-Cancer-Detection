@@ -1,9 +1,11 @@
 import os
 import io
+import sys
 import json
 import time
 import copy
 import random
+import joblib
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -198,7 +200,7 @@ class LungCTDataset(Dataset):
         return img_pil, label
 
 # ---------------------------------------------------------
-# PART 4 & 5 — Dataset Folder Verification & Loading
+# PART 4 & 5 — Dataset Folder Verification & Integrity Check
 # ---------------------------------------------------------
 def load_and_verify_dataset():
     print("==================================================")
@@ -239,11 +241,14 @@ def load_and_verify_dataset():
         for root, dirs, files in os.walk(c_path):
             for filename in files:
                 if filename.lower().endswith(IMAGE_EXTENSIONS):
-                    records.append({
-                        "filepath": os.path.join(root, filename),
-                        "class": c_name,
-                        "label": label
-                    })
+                    fp = os.path.join(root, filename)
+                    # Integrity check: Ensure file exists and can be opened
+                    if os.path.exists(fp) and cv2.imread(fp, cv2.IMREAD_GRAYSCALE) is not None:
+                        records.append({
+                            "filepath": fp,
+                            "class": c_name,
+                            "label": label
+                        })
 
     df = pd.DataFrame(records)
     unique_classes = set(df["class"].unique())
@@ -256,7 +261,7 @@ def load_and_verify_dataset():
     return df
 
 # ---------------------------------------------------------
-# Evaluation Helper for Per-Class Metrics
+# Detailed Per-Class Metrics Calculator
 # ---------------------------------------------------------
 def get_detailed_metrics(y_true, y_pred, y_prob=None):
     acc = float(accuracy_score(y_true, y_pred))

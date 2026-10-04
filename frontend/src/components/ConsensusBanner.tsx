@@ -1,6 +1,6 @@
 import React from 'react';
 import { PredictResponse } from '../types/api';
-import { ShieldAlert, Activity, AlertTriangle, FileText } from 'lucide-react';
+import { ShieldAlert, Activity, FileText } from 'lucide-react';
 
 interface PredictionResultCardProps {
   predictData?: PredictResponse;
@@ -52,10 +52,10 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
           textTransform: 'uppercase',
           margin: 0
         }}>
-          AI PREDICTION RESULT
+          AI PREDICTION & DIAGNOSTIC RESULT
         </h2>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-          Case ID: <strong style={{ color: '#fff' }}>{case_id}</strong> • Main Model: ConvNeXt-Tiny
+          Case Reference ID: <strong style={{ color: '#fff' }}>{case_id}</strong> • Mode: AI Medical Imaging Assessment
         </div>
       </div>
 
@@ -75,7 +75,7 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
           border: '1px solid var(--border-color)'
         }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            Predicted Classification
+            Primary Classification
           </div>
           <div className={`consensus-badge ${badgeClass}`} style={{ fontSize: '1.4rem', padding: '0.4rem 1.2rem', display: 'inline-block' }}>
             {predicted_class.toUpperCase()}
@@ -91,7 +91,7 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
           border: '1px solid var(--border-color)'
         }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            Model-Estimated Malignant Probability
+            AI-Estimated Malignant Probability
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--status-malignant)' }}>
             {modelMalignantPct.toFixed(1)}%
@@ -107,7 +107,7 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
           border: '1px solid var(--border-color)'
         }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            Confidence
+            System Confidence
           </div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-cyan)' }}>
             {confPct.toFixed(1)}%
@@ -127,10 +127,10 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
         color: '#f87171'
       }}>
         <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <ShieldAlert size={18} /> Medical Terminology Notice
+          <ShieldAlert size={18} /> Clinical Notice
         </div>
         <div>
-          This value represents the ConvNeXt-Tiny model's estimated probability for the Malignant class for the uploaded CT image. It is not a clinically validated cancer risk and should not be interpreted as a medical diagnosis.
+          This value represents the AI system's estimated probability for the Malignant category for the uploaded CT image. It is a decision-support calculation, not a confirmed medical diagnosis. Clinical verification by a radiologist or pulmonologist is required.
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
         border: '1px solid var(--border-color)'
       }}>
         <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Activity size={18} style={{ color: 'var(--primary-cyan)' }} /> Class Probability Distribution (ConvNeXt-Tiny)
+          <Activity size={18} style={{ color: 'var(--primary-cyan)' }} /> Class Probability Distribution
         </div>
 
         <div className="prob-bars">
@@ -190,16 +190,16 @@ export const ConsensusBanner: React.FC<PredictionResultCardProps> = ({ predictDa
         color: '#cbd5e1'
       }}>
         <div style={{ fontWeight: 600, color: 'var(--primary-cyan)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FileText size={18} /> Interpretation
+          <FileText size={18} /> Diagnostic Interpretation
         </div>
         <p style={{ margin: '0 0 0.5rem 0' }}>
-          For this uploaded CT image, the ConvNeXt-Tiny model assigned the highest probability to the <strong>{predicted_class}</strong> class.
+          For this uploaded CT image, the AI system assigned the highest probability to the <strong>{predicted_class}</strong> category.
         </p>
         <p style={{ margin: '0 0 0.5rem 0' }}>
-          The model-estimated malignant probability is <strong>{modelMalignantPct.toFixed(1)}%</strong>.
+          The system-estimated malignant probability is <strong>{modelMalignantPct.toFixed(1)}%</strong>.
         </p>
         <p style={{ margin: 0, fontStyle: 'italic', color: 'var(--text-muted)' }}>
-          This is an AI model output and not a clinically validated cancer probability or diagnosis. The system is an AI-assisted preliminary classification/research prototype and does not replace clinical diagnosis.
+          This is an automated decision support output. Clinical evaluation and diagnostic confirmation by a licensed physician are required.
         </p>
       </div>
     </div>

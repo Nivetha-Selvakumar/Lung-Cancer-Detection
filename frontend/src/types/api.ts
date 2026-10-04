@@ -1,3 +1,28 @@
+export interface UserProfile {
+  id?: number;
+  username: string;
+  email: string;
+  full_name: string;
+  role: string;
+  hospital_name?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  user?: UserProfile;
+  db_engine?: string;
+  error?: string;
+}
+
+export interface DbStatusResponse {
+  engine: string;
+  connected: boolean;
+  host?: string;
+  database?: string;
+  port?: number;
+  message: string;
+}
+
 export interface ClassProbabilities {
   Normal: number;
   Benign: number;
@@ -66,4 +91,5 @@ export interface HealthResponse {
   xgb_loaded: boolean;
   gp_loaded: boolean;
   convnext_loaded: boolean;
+  db?: DbStatusResponse;
 }

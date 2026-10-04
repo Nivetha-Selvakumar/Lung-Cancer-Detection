@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, FileText, CheckCircle2 } from 'lucide-react';
+import { Bot, CheckCircle2 } from 'lucide-react';
 import { LLMExplanation } from '../types/api';
 
 interface ClinicalReportViewProps {
@@ -13,10 +13,10 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({ explanat
     <div className="card" style={{ marginTop: '1.5rem', border: '1px solid var(--border-glow)' }}>
       <div className="card-title" style={{ color: 'var(--primary-cyan)', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Bot size={22} /> AI Explanation (LLM Integration)
+          <Bot size={22} /> AI Clinical Diagnostic Explanation
         </div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-          <CheckCircle2 size={15} style={{ color: 'var(--status-normal)' }} /> Academic Model Decision Synthesis
+          <CheckCircle2 size={15} style={{ color: 'var(--status-normal)' }} /> Automated Diagnostic Synthesis
         </div>
       </div>
 
@@ -24,7 +24,7 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({ explanat
         style={{
           fontFamily: "'Courier New', Courier, monospace",
           fontSize: '0.88rem',
-          lineHeight: '1.6',
+          lineHeight: '1.65',
           background: 'rgba(10, 15, 26, 0.95)',
           color: '#e2e8f0',
           padding: '1.5rem',
@@ -32,7 +32,7 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({ explanat
           border: '1px solid var(--border-color)',
           whiteSpace: 'pre-wrap',
           overflowX: 'auto',
-          maxHeight: '450px'
+          maxHeight: '480px'
         }}
       >
         {explanation.text}
