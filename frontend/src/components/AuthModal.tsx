@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types/api';
-import { loginUser, registerUser, configureDbPassword } from '../services/api';
-import { User, Key, Lock, Mail, Building, Database, X, LogIn, UserPlus } from 'lucide-react';
+import { registerUser } from '../services/api';
+import { User, Lock, Mail, Building, X, UserPlus } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,13 +10,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
-  const [mode, setMode] = useState<'login' | 'register' | 'db_config'>('login');
-  
-  // Login Form
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  
-  // Register Form
+  // Register Form State
   const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -24,34 +18,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
   const [regRole, setRegRole] = useState('Senior Pulmonologist');
   const [regHospital, setRegHospital] = useState('General Hospital');
 
-  // DB Password Config
-  const [dbPassword, setDbPassword] = useState('');
-
   // Status/Error
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const res = await loginUser(username, password);
-      setLoading(false);
-      if (res.success && res.user) {
-        onLoginSuccess(res.user);
-        onClose();
-      } else {
-        setErrorMsg(res.error || 'Authentication failed');
-      }
-    } catch (err: any) {
-      setLoading(false);
-      setErrorMsg(err.message || 'Server login request failed');
-    }
-  };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,37 +40,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
       });
       setLoading(false);
       if (res.success && res.user) {
-        onLoginSuccess(res.user);
-        onClose();
+        setSuccessMsg('User account created successfully!');
+        setTimeout(() => {
+          onLoginSuccess(res.user!);
+          onClose();
+          setSuccessMsg(null);
+        }, 1200);
       } else {
         setErrorMsg(res.error || 'Registration failed');
       }
     } catch (err: any) {
       setLoading(false);
       setErrorMsg(err.message || 'Registration request failed');
-    }
-  };
-
-  const handleDbConfigSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    try {
-      const res = await configureDbPassword(dbPassword);
-      setLoading(false);
-      if (res.success) {
-        setSuccessMsg(res.message || 'MySQL database connected!');
-        setTimeout(() => {
-          setMode('login');
-          setSuccessMsg(null);
-        }, 1500);
-      } else {
-        setErrorMsg(res.error || 'Failed to connect to MySQL database');
-      }
-    } catch (err: any) {
-      setLoading(false);
-      setErrorMsg(err.message || 'MySQL configuration request failed');
     }
   };
 
@@ -114,40 +67,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
         </button>
 
         {/* Modal Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <div style={{ background: '#e0e7ff', color: '#4f46e5', width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {mode === 'login' ? <LogIn size={22} /> : mode === 'register' ? <UserPlus size={22} /> : <Database size={22} />}
+            <UserPlus size={22} />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>
-              {mode === 'login' ? 'Doctor Portal Login' : mode === 'register' ? 'Register Practitioner Account' : 'Connect MySQL Database'}
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 700 }}>
+              Add Practitioner / User Account
             </h2>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-              {mode === 'login' ? 'Access clinical diagnostic system' : mode === 'register' ? 'Create new practitioner credentials' : 'Configure local MySQL-8 root password'}
+            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.15rem' }}>
+              Create new practitioner credentials
             </div>
           </div>
-        </div>
-
-        {/* Mode Selector Tabs */}
-        <div style={{ display: 'flex', background: '#f1f5f9', padding: '0.25rem', borderRadius: '8px', marginBottom: '1.25rem' }}>
-          <button
-            onClick={() => { setMode('login'); setErrorMsg(null); }}
-            style={{ flex: 1, padding: '0.45rem', border: 'none', borderRadius: '6px', background: mode === 'login' ? '#ffffff' : 'transparent', color: mode === 'login' ? '#4f46e5' : '#64748b', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => { setMode('register'); setErrorMsg(null); }}
-            style={{ flex: 1, padding: '0.45rem', border: 'none', borderRadius: '6px', background: mode === 'register' ? '#ffffff' : 'transparent', color: mode === 'register' ? '#4f46e5' : '#64748b', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-          >
-            Register
-          </button>
-          <button
-            onClick={() => { setMode('db_config'); setErrorMsg(null); }}
-            style={{ flex: 1, padding: '0.45rem', border: 'none', borderRadius: '6px', background: mode === 'db_config' ? '#ffffff' : 'transparent', color: mode === 'db_config' ? '#4f46e5' : '#64748b', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
-          >
-            MySQL DB
-          </button>
         </div>
 
         {errorMsg && (
@@ -162,157 +93,93 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
           </div>
         )}
 
-        {/* Login Form */}
-        {mode === 'login' && (
-          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>Username or Email</label>
-              <div style={{ position: 'relative' }}>
-                <User size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="doctor"
-                  style={{ width: '100%', padding: '0.6rem 0.75rem 0.6rem 2.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem' }}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  style={{ width: '100%', padding: '0.6rem 0.75rem 0.6rem 2.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem' }}
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ marginTop: '0.5rem', background: '#4f46e5', color: '#ffffff', border: 'none', padding: '0.7rem', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)' }}
-            >
-              {loading ? 'Authenticating...' : 'Sign In to Diagnostic Suite'}
-            </button>
-          </form>
-        )}
-
         {/* Register Form */}
-        {mode === 'register' && (
-          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+        <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Full Name</label>
+            <input
+              type="text"
+              value={regFullName}
+              onChange={(e) => setRegFullName(e.target.value)}
+              placeholder="Dr. Selvakumar"
+              style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+              required
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Full Name</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Username</label>
               <input
                 type="text"
-                value={regFullName}
-                onChange={(e) => setRegFullName(e.target.value)}
-                placeholder="Dr. Selvakumar"
-                style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                value={regUsername}
+                onChange={(e) => setRegUsername(e.target.value)}
+                placeholder="nivethaselvakumar23@gmail.com"
+                style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
                 required
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Username</label>
-                <input
-                  type="text"
-                  value={regUsername}
-                  onChange={(e) => setRegUsername(e.target.value)}
-                  placeholder="nivetha"
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                  required
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Email</label>
-                <input
-                  type="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="doctor@hospital.org"
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                  required
-                />
-              </div>
-            </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Password</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Email</label>
               <input
-                type="password"
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="••••••••"
-                style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                type="email"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                placeholder="doctor@hospital.org"
+                style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
                 required
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Role</label>
-                <input
-                  type="text"
-                  value={regRole}
-                  onChange={(e) => setRegRole(e.target.value)}
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.2rem' }}>Hospital</label>
-                <input
-                  type="text"
-                  value={regHospital}
-                  onChange={(e) => setRegHospital(e.target.value)}
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ marginTop: '0.4rem', background: '#4f46e5', color: '#ffffff', border: 'none', padding: '0.65rem', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}
-            >
-              {loading ? 'Creating Account...' : 'Register Practitioner Account'}
-            </button>
-          </form>
-        )}
-
-        {/* MySQL DB Password Config */}
-        {mode === 'db_config' && (
-          <form onSubmit={handleDbConfigSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Password</label>
+            <input
+              type="password"
+              value={regPassword}
+              onChange={(e) => setRegPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+              required
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
-                MySQL Root Password (localhost:3306)
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Key size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                <input
-                  type="password"
-                  value={dbPassword}
-                  onChange={(e) => setDbPassword(e.target.value)}
-                  placeholder="Enter your MySQL password"
-                  style={{ width: '100%', padding: '0.65rem 0.75rem 0.65rem 2.2rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem' }}
-                  required
-                />
-              </div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Role</label>
+              <input
+                type="text"
+                value={regRole}
+                onChange={(e) => setRegRole(e.target.value)}
+                style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+              />
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ marginTop: '0.2rem', background: '#4f46e5', color: '#ffffff', border: 'none', padding: '0.7rem', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
-            >
-              {loading ? 'Testing MySQL Connection...' : 'Connect to MySQL-8 DB'}
-            </button>
-          </form>
-        )}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.25rem' }}>Hospital</label>
+              <input
+                type="text"
+                value={regHospital}
+                onChange={(e) => setRegHospital(e.target.value)}
+                style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: '0.6rem',
+              background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
+            }}
+          >
+            {loading ? 'Creating Account...' : 'Add User Account'}
+          </button>
+        </form>
       </div>
     </div>
   );

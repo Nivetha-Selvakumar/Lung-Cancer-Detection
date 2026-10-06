@@ -57,10 +57,10 @@ export const ArchitectureSpecs: React.FC = () => {
 
       <div className="card" style={{ marginTop: '1.5rem', background: 'rgba(15, 23, 42, 0.6)' }}>
         <div className="card-title" style={{ color: 'var(--primary-cyan)' }}>
-          <ShieldCheck size={20} /> Doctor & Clinical User Authentication (MySQL Powered)
+          <ShieldCheck size={20} /> Doctor & Clinical User Authentication
         </div>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-          User details, physician credentials, and access logs are managed securely through a MySQL database table structure (`users`). Medical personnel can sign in with their credentials to access live diagnostic evaluation, review AI visual heatmaps, and export clinical decision reports.
+          User details, physician credentials, and access logs are managed securely through user profile table structures. Medical personnel can sign in with their credentials to access live diagnostic evaluation, review AI visual heatmaps, and export clinical decision reports.
         </p>
       </div>
     </div>

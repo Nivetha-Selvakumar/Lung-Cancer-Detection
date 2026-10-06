@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Scan, BarChart3, Cpu, User, LogIn, LogOut, Database, History } from 'lucide-react';
+import { Activity, Scan, BarChart3, Cpu, User, LogIn, LogOut, History } from 'lucide-react';
 import { HealthResponse, UserProfile } from '../types/api';
 
 interface NavbarProps {
@@ -35,8 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       statusText = 'System Initializing...';
     }
   }
-
-  const dbEngine = health?.db?.engine || 'MySQL DB';
 
   return (
     <header className="navbar">
@@ -78,22 +76,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        {/* DB Engine Status Pill */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          fontSize: '0.75rem',
-          background: 'rgba(30, 41, 59, 0.7)',
-          padding: '0.35rem 0.65rem',
-          borderRadius: '20px',
-          border: '1px solid var(--border-color)',
-          color: 'var(--text-muted)'
-        }} title="MySQL User Details Database Connection">
-          <Database size={13} style={{ color: 'var(--primary-cyan)' }} />
-          <span>{dbEngine}</span>
-        </div>
-
         {/* Backend Online Pill */}
         <div className="server-status">
           <div className={`status-dot ${isOnline ? '' : 'offline'}`} />

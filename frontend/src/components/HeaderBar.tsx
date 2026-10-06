@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Database, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { UserProfile, HealthResponse } from '../types/api';
 
 interface HeaderBarProps {
@@ -11,7 +11,6 @@ interface HeaderBarProps {
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({ currentUser, health, healthError, onOpenAuthModal }) => {
   const isOnline = !healthError && health?.convnext_loaded;
-  const dbEngine = health?.db?.engine || 'MySQL DB';
 
   const userInitial = currentUser?.full_name ? currentUser.full_name.charAt(0).toUpperCase() : 'N';
   const userName = currentUser?.full_name || 'Nivetha S.';
@@ -44,22 +43,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ currentUser, health, healt
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* DB Engine Status Pill */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          fontSize: '0.76rem',
-          background: '#f1f5f9',
-          padding: '0.35rem 0.7rem',
-          borderRadius: '20px',
-          color: '#475569',
-          fontWeight: 600
-        }}>
-          <Database size={13} style={{ color: '#4f46e5' }} />
-          <span>{dbEngine}</span>
-        </div>
-
         {/* Backend Online Status Pill */}
         <div style={{
           display: 'flex',
@@ -76,14 +59,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ currentUser, health, healt
           <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#ef4444' }} />
           <span>{isOnline ? 'Backend Online' : 'Backend Offline'}</span>
         </div>
-
-        {/* Notification Bell */}
-        <button
-          onClick={() => alert('No new notifications')}
-          style={{ background: '#f8fafc', border: '1px solid #e2e8f0', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
-        >
-          <Bell size={18} />
-        </button>
 
         {/* User Profile Avatar Pill */}
         <div

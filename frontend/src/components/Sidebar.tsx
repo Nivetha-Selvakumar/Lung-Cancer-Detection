@@ -14,7 +14,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, curre
     { id: 'home', label: 'Home', icon: Home },
     { id: 'predict', label: 'Predict', icon: Scan },
     { id: 'dataset', label: 'Dataset', icon: Database },
-    { id: 'train', label: 'Train Model', icon: Cpu },
     { id: 'dashboard', label: 'Model Performance', icon: BarChart3 },
     { id: 'history', label: 'History', icon: History },
     { id: 'profile', label: 'Profile', icon: User },

@@ -5,10 +5,14 @@ export interface UserProfile {
   full_name: string;
   role: string;
   hospital_name?: string;
+  department?: string;
+  institution?: string;
+  auth_token?: string;
 }
 
 export interface AuthResponse {
   success: boolean;
+  token?: string;
   user?: UserProfile;
   db_engine?: string;
   error?: string;
@@ -44,6 +48,8 @@ export interface LLMExplanation {
 
 export interface PredictResponse {
   case_id: string;
+  filename?: string;
+  fused_features?: number[];
   predicted_class: 'Normal' | 'Benign' | 'Malignant';
   predicted_class_index: number;
   confidence: number;

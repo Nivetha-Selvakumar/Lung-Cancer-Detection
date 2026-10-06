@@ -114,6 +114,71 @@ def segment_lung(image_input):
     roi[mask == 0] = 0
     return original, mask, roi
 
+def verify_lung_ct_scan(bgr_img, grayscale_img, mask):
+    """
+    Comprehensive verification to ensure uploaded file is a valid chest CT scan image.
+    Rejects color posters/photos, document flyers, non-medical images, and invalid masks.
+    """
+    if bgr_img is None or grayscale_img is None:
+        return False, "Invalid Image Error: Unable to decode image file. Please upload a valid PNG, JPG, or JPEG file."
+
+    # 1. Color Variance Check: Real medical CT scans are grayscale.
+    # Posters, flyers, diagrams, and regular photos contain distinct color variations across R, G, B channels.
+    if len(bgr_img.shape) == 3 and bgr_img.shape[2] == 3:
+        b, g, r = cv2.split(bgr_img)
+        diff_rg = np.mean(np.abs(r.astype(float) - g.astype(float)))
+        diff_gb = np.mean(np.abs(g.astype(float) - b.astype(float)))
+        total_color_diff = diff_rg + diff_gb
+        if total_color_diff > 5.0:
+            return False, "Invalid CT Scan Image: The uploaded file contains colored text, graphics, or photos. Medical CT scans must be grayscale radiological images."
+
+    # 2. Outer Corner Background Brightness Check:
+    # Medical CT scans have dark/black backgrounds around the thoracic body slice.
+    # Text documents, flyers, certificates, posters have white or light backgrounds.
+    h, w = grayscale_img.shape
+    ch = max(5, int(h * 0.08))
+    cw = max(5, int(w * 0.08))
+    
+    top_left = np.mean(grayscale_img[:ch, :cw])
+    top_right = np.mean(grayscale_img[:ch, -cw:])
+    bottom_left = np.mean(grayscale_img[-ch:, :cw])
+    bottom_right = np.mean(grayscale_img[-ch:, -cw:])
+    avg_corner = (top_left + top_right + bottom_left + bottom_right) / 4.0
+
+    if avg_corner > 140.0:
+        return False, "Invalid CT Scan Image: The image background is white/bright (document/flyer detected). Please upload a valid chest CT scan image."
+
+    # 3. Lung Mask Anatomical Verification:
+    mask_pixels = float((mask > 0).sum())
+    total_pixels = float(mask.size)
+    lung_mask_coverage = mask_pixels / total_pixels
+
+    if lung_mask_coverage < 0.035 or mask_pixels < 40:
+        return False, "Invalid CT Scan Image: The uploaded image does not contain recognizable thoracic lung parenchyma structures."
+
+    if lung_mask_coverage > 0.55:
+        return False, "Invalid CT Scan Image: Segmented area exceeds standard anatomical lung field boundaries."
+
+    # 4. Connected Components & Fragmentation Check:
+    # A true lung CT scan has 1 or 2 main contiguous lung fields.
+    # Posters with text produce dozens of fragmented small blobs.
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask)
+    if num_labels <= 1:
+        return False, "Invalid CT Scan Image: Unable to isolate valid lung parenchyma fields."
+
+    areas = stats[1:, cv2.CC_STAT_AREA]
+    large_components = [a for a in areas if a > 0.004 * h * w]
+    if len(large_components) > 5:
+        return False, "Invalid CT Scan Image: Fragmented non-medical patterns detected (text/graphic elements). Please upload a valid chest CT scan."
+
+    sorted_areas = sorted(areas, reverse=True)
+    top2_area = sum(sorted_areas[:2])
+    total_mask_area = sum(areas)
+    if total_mask_area > 0 and (top2_area / total_mask_area) < 0.60:
+        return False, "Invalid CT Scan Image: Segmented pattern does not match thoracic lung anatomy."
+
+    return True, ""
+
 def preprocess_image_array(original, mask, target_size=(224, 224)):
     image = cv2.resize(original, target_size, interpolation=cv2.INTER_AREA)
     mask_resized = cv2.resize(mask, target_size, interpolation=cv2.INTER_NEAREST)
@@ -163,8 +228,24 @@ def extract_gp_features_from_norm(norm_img, enhanced_img):
     return np.concatenate([hog_feat, lbp_hist, intensity])
 
 # ---------------------------------------------------------
-# PyTorch ConvNeXt Model & Grad-CAM Implementation
+# PyTorch ConvNeXt & HybridClassifier Architecture (Hybrid_LC)
 # ---------------------------------------------------------
+class HybridClassifier(nn.Module):
+    def __init__(self, input_dim=82, num_classes=3):
+        super(HybridClassifier, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(0.25),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(0.20),
+            nn.Linear(32, num_classes)
+        )
+
+    def forward(self, x):
+        return self.network(x)
+
 class ConvNeXtClassifier(nn.Module):
     def __init__(self, num_classes=3):
         super(ConvNeXtClassifier, self).__init__()
@@ -225,13 +306,14 @@ gp_pca = None
 gp_models = None
 
 convnext_model = None
+hybrid_model = None
 gradcam_engine = None
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_all_artifacts():
     global xgb_scaler, xgb_pca, xgb_model
     global gp_scaler, gp_pca, gp_models
-    global convnext_model, gradcam_engine
+    global convnext_model, hybrid_model, gradcam_engine
 
     try:
         xgb_scaler = joblib.load(os.path.join(SAVED_MODELS_DIR, "xgb_scaler.joblib"))
@@ -259,6 +341,22 @@ def load_all_artifacts():
             print("[Server] Loaded trained ConvNeXt PyTorch model & Grad-CAM target layer successfully.")
     except Exception as e:
         print(f"[Server Warning] Could not load ConvNeXt model: {e}")
+
+    # Load fine-tuned Hybrid_LC model (82-D Fused Representation classifier)
+    hybrid_pth = os.path.join(SAVED_MODELS_DIR, "hybrid_classifier_final.pth")
+    if os.path.exists(hybrid_pth):
+        try:
+            hm = HybridClassifier(input_dim=82, num_classes=3).to(device)
+            ckpt = torch.load(hybrid_pth, map_location=device)
+            if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+                hm.load_state_dict(ckpt["model_state_dict"])
+            else:
+                hm.load_state_dict(ckpt)
+            hm.eval()
+            hybrid_model = hm
+            print("[Server] Loaded fine-tuned HybridClassifier (Hybrid_LC 82-D) successfully.")
+        except Exception as e:
+            print(f"[Server Warning] Could not load hybrid classifier: {e}")
 
 load_all_artifacts()
 
@@ -439,30 +537,18 @@ def auth_me():
     if not token:
         token = request.args.get("token")
 
-    if not token:
-        return jsonify({"success": False, "error": "Authorization token is missing."}), 401
+    if not token or token == "null" or token == "undefined":
+        return jsonify({"success": False, "error": "Authorization token is missing."})
 
     user = db.get_user_by_token(token)
     if user:
         return jsonify({"success": True, "user": user})
     else:
-        return jsonify({"success": False, "error": "Invalid or expired session token."}), 401
+        return jsonify({"success": False, "error": "Invalid or expired session token."})
 
 @app.route("/api/auth/register", methods=["POST"])
 def auth_register():
     data = request.get_json() or {}
-    
-    # Check if request comes from an authenticated doctor
-    token = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-    if not token:
-        token = data.get("doctor_token") or data.get("token")
-
-    auth_user = db.get_user_by_token(token) if token else None
-    if not auth_user:
-        return jsonify({"success": False, "error": "Access Denied: Only an authenticated doctor can register/add new doctor credentials."}), 403
 
     username = data.get("username", "").strip()
     email = data.get("email", "").strip()
@@ -502,6 +588,65 @@ def auth_login():
         return jsonify(result), 200
     else:
         return jsonify(result), 401
+
+@app.route("/api/auth/logout", methods=["POST"])
+def auth_logout():
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+    if not token and request.is_json:
+        data = request.get_json() or {}
+        token = data.get("token")
+    if token:
+        db.logout_token(token)
+    return jsonify({"success": True, "message": "Logged out successfully."})
+
+@app.route("/api/auth/forgot-password", methods=["POST"])
+def auth_forgot_password():
+    data = request.get_json() or {}
+    identity = data.get("email") or data.get("username") or ""
+    result = db.request_password_reset(identity)
+    if result.get("success"):
+        return jsonify(result), 200
+    else:
+        return jsonify(result), 400
+
+@app.route("/api/auth/reset-password", methods=["POST"])
+def auth_reset_password():
+    data = request.get_json() or {}
+    identity = data.get("identity") or data.get("email") or data.get("username") or ""
+    reset_token = data.get("reset_token", "")
+    new_password = data.get("new_password", "")
+    result = db.reset_password(identity, reset_token, new_password)
+    if result.get("success"):
+        return jsonify(result), 200
+    else:
+        return jsonify(result), 400
+
+@app.route("/api/auth/update-profile", methods=["POST"])
+def auth_update_profile():
+    data = request.get_json() or {}
+    user_id = data.get("id")
+    username = data.get("username")
+    email = data.get("email")
+    full_name = data.get("full_name")
+    role = data.get("role")
+    hospital_name = data.get("hospital_name") or data.get("institution")
+    
+    result = db.update_user_profile(
+        user_id=user_id,
+        username=username,
+        email=email,
+        full_name=full_name,
+        role=role,
+        hospital_name=hospital_name
+    )
+    if result.get("success"):
+        return jsonify(result), 200
+    else:
+        return jsonify(result), 400
+
 
 @app.route("/api/metrics", methods=["GET"])
 def get_metrics():
@@ -560,19 +705,31 @@ def predict():
     if file.filename == "":
         return jsonify({"error": "Unable to process the uploaded CT image. Selected file is empty."}), 400
 
+    # File Extension Validation
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in [".png", ".jpg", ".jpeg"]:
+        return jsonify({"error": "Invalid File Format: Only PNG, JPG, and JPEG image formats are supported for CT scan analysis."}), 400
+
     try:
         in_memory_bytes = file.read()
         nparr = np.frombuffer(in_memory_bytes, np.uint8)
         grayscale_img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        bgr_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-        if grayscale_img is None:
-            return jsonify({"error": "Unable to process the uploaded CT image."}), 400
+        if grayscale_img is None or grayscale_img.size == 0 or bgr_img is None:
+            return jsonify({"error": "Invalid Image Error: Unable to decode image file. Please upload a valid PNG, JPG, or JPEG file."}), 400
 
         # Case ID
         case_id = generate_case_id()
 
-        # 1. Classical Lung Field Segmentation & Preprocessing (matching Colab)
+        # 1. Classical Lung Field Segmentation & Preprocessing
         original_img, mask, roi_img = segment_lung(grayscale_img)
+
+        # 2. Comprehensive Multi-Criteria CT Scan Verification
+        is_valid_ct, verification_error = verify_lung_ct_scan(bgr_img, grayscale_img, mask)
+        if not is_valid_ct:
+            return jsonify({"error": verification_error}), 400
+
         mask_resized = cv2.resize(mask, (224, 224), interpolation=cv2.INTER_NEAREST)
         
         # 2. Convert segmented lung ROI directly to PyTorch Tensor for ConvNeXt (matching Colab val_test_transform)
@@ -583,16 +740,45 @@ def predict():
         norm_img = cv2.resize(roi_img, (224, 224), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
         enhanced_img = cv2.resize(roi_img, (224, 224), interpolation=cv2.INTER_AREA)
 
-        # 3. ConvNeXt-Tiny Model Inference with Test-Time Augmentation (TTA)
-        # (MAIN & ONLY PRODUCTION PREDICTION MODEL)
-        logits_orig = convnext_model(img_tensor)
-        flipped_tensor = torch.flip(img_tensor, dims=[3])
-        logits_flip = convnext_model(flipped_tensor)
+        # Extract 82-D fused representation (50 handcrafted + 32 deep features = Hybrid_LC)
+        fused_features_82 = []
+        try:
+            gp_feat = extract_gp_features_from_norm(norm_img, enhanced_img)
+            hc_50 = gp_feat[:50] if len(gp_feat) >= 50 else np.pad(gp_feat, (0, max(0, 50 - len(gp_feat))))
+            hc_scaled = (hc_50 - np.mean(hc_50)) / (np.std(hc_50) + 1e-8)
+            
+            with torch.no_grad():
+                feat_raw = convnext_model(img_tensor).detach().cpu().numpy()[0]
+            dp_32 = feat_raw[:768].reshape(32, 24).mean(axis=1) if len(feat_raw) >= 768 else np.zeros(32, dtype=np.float32)
+            dp_scaled = (dp_32 - np.mean(dp_32)) / (np.std(dp_32) + 1e-8)
+            
+            fused_features_82 = np.concatenate([hc_scaled, dp_scaled]).astype(float).tolist()
+        except Exception as e:
+            print(f"[Feature Fusion Warning] {e}")
 
-        probs_orig = torch.softmax(logits_orig, dim=1)[0]
-        probs_flip = torch.softmax(logits_flip, dim=1)[0]
-        probs_tensor = (probs_orig + probs_flip) / 2.0
-        probs_np = probs_tensor.detach().cpu().numpy()
+        # 3. Model Inference: Use fine-tuned Hybrid_LC 82-D classifier if active, else ConvNeXt TTA
+        if hybrid_model is not None and len(fused_features_82) == 82:
+            try:
+                fused_t = torch.tensor([fused_features_82], dtype=torch.float32).to(device)
+                hybrid_model.eval()
+                with torch.no_grad():
+                    h_logits = hybrid_model(fused_t)
+                    probs_np = torch.softmax(h_logits, dim=1)[0].detach().cpu().numpy()
+            except Exception as e:
+                print(f"[Hybrid Prediction Warning] Falling back to ConvNeXt TTA: {e}")
+                logits_orig = convnext_model(img_tensor)
+                flipped_tensor = torch.flip(img_tensor, dims=[3])
+                logits_flip = convnext_model(flipped_tensor)
+                probs_orig = torch.softmax(logits_orig, dim=1)[0]
+                probs_flip = torch.softmax(logits_flip, dim=1)[0]
+                probs_np = ((probs_orig + probs_flip) / 2.0).detach().cpu().numpy()
+        else:
+            logits_orig = convnext_model(img_tensor)
+            flipped_tensor = torch.flip(img_tensor, dims=[3])
+            logits_flip = convnext_model(flipped_tensor)
+            probs_orig = torch.softmax(logits_orig, dim=1)[0]
+            probs_flip = torch.softmax(logits_flip, dim=1)[0]
+            probs_np = ((probs_orig + probs_flip) / 2.0).detach().cpu().numpy()
 
         pred_idx = int(np.argmax(probs_np))
         predicted_class = CLASS_NAMES[pred_idx]
@@ -718,13 +904,32 @@ def predict():
             probabilities=probabilities_dict,
             model_name="ConvNeXt-Tiny",
             model_version="v1.0",
-            gradcam_focus=gradcam_focus_in_lung
+            gradcam_focus=gradcam_focus_in_lung,
+            image_b64=roi_b64,
+            verified_by_doctor="No"
         )
+
+        # Generate 82-dimensional fused feature vector matching Hybrid_LC pipeline
+        fused_features_82 = []
+        try:
+            gp_feat = extract_gp_features_from_norm(norm_img, enhanced_img)
+            hc_50 = gp_feat[:50] if len(gp_feat) >= 50 else np.pad(gp_feat, (0, max(0, 50 - len(gp_feat))))
+            hc_scaled = (hc_50 - np.mean(hc_50)) / (np.std(hc_50) + 1e-8)
+            
+            with torch.no_grad():
+                feat_raw = convnext_model(img_tensor).detach().cpu().numpy()[0]
+            dp_32 = feat_raw[:768].reshape(32, 24).mean(axis=1) if len(feat_raw) >= 768 else np.zeros(32, dtype=np.float32)
+            dp_scaled = (dp_32 - np.mean(dp_32)) / (np.std(dp_32) + 1e-8)
+            
+            fused_features_82 = np.concatenate([hc_scaled, dp_scaled]).astype(float).tolist()
+        except Exception as e:
+            print(f"[Feature Fusion Warning] {e}")
 
         # Construct final backend response matching PART 44
         response_data = {
             "success": True,
             "case_id": case_id,
+            "filename": file.filename,
             "predicted_class": predicted_class,
             "predicted_class_index": pred_idx,
             "confidence": confidence_val,
@@ -736,6 +941,7 @@ def predict():
             model_est_key: probabilities_dict[predicted_class],
             "lung_mask_coverage": lung_mask_coverage,
             "gradcam_focus_in_lung": gradcam_focus_in_lung,
+            "fused_features": fused_features_82,
             "images": {
                 "original": original_b64,
                 "mask": mask_b64,
@@ -765,11 +971,169 @@ def get_history():
 def update_history_status():
     data = request.get_json() or {}
     record_id = data.get("id")
-    new_status = data.get("status", "Reviewed")
+    new_status = data.get("status", "Review")
+    verified_by = data.get("verified_by_doctor")
     if not record_id:
         return jsonify({"success": False, "error": "Record ID is required."}), 400
-    res = db.update_verification_status(record_id, new_status)
+    res = db.update_verification_status(record_id, new_status, verified_by_doctor=verified_by)
     return jsonify({"success": res})
+
+@app.route("/api/history/delete", methods=["POST"])
+def delete_history_item():
+    data = request.get_json() or {}
+    record_id = data.get("id")
+    if not record_id:
+        return jsonify({"success": False, "error": "Record ID is required."}), 400
+    res = db.delete_prediction(record_id)
+    return jsonify({"success": res})
+
+# ---------------------------------------------------------
+# Doctor Feedback & Controlled Retraining API (SARSA + Hybrid_LC)
+# ---------------------------------------------------------
+SARSA_Q_TABLE = {}
+SARSA_Q_PATH = os.path.join(SAVED_MODELS_DIR, "sarsa_q_table.json")
+FEEDBACK_JSON_PATH = os.path.join(SAVED_MODELS_DIR, "doctor_feedback.json")
+
+if os.path.exists(SARSA_Q_PATH):
+    try:
+        with open(SARSA_Q_PATH, "r") as f:
+            SARSA_Q_TABLE = json.load(f)
+    except Exception:
+        SARSA_Q_TABLE = {}
+
+def execute_controlled_model_update(feedback_list):
+    global hybrid_model
+    verified_records = [r for r in feedback_list if len(r.get("fused_features", [])) == 82 and r.get("doctor_verified_class") in CLASS_NAMES]
+    
+    if not verified_records:
+        return {"success": False, "message": "No usable doctor-verified 82-D feature samples found for retraining."}
+
+    X_fb = np.array([r["fused_features"] for r in verified_records], dtype=np.float32)
+    y_fb = np.array([CLASS_TO_LABEL[r["doctor_verified_class"]] for r in verified_records], dtype=np.int64)
+
+    X_tensor = torch.tensor(X_fb, dtype=torch.float32).to(device)
+    y_tensor = torch.tensor(y_fb, dtype=torch.long).to(device)
+
+    candidate_model = HybridClassifier(input_dim=82, num_classes=3).to(device)
+    candidate_model.train()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(candidate_model.parameters(), lr=0.0001, weight_decay=1e-4)
+
+    for epoch in range(15):
+        optimizer.zero_grad()
+        outputs = candidate_model(X_tensor)
+        loss = criterion(outputs, y_tensor)
+        loss.backward()
+        optimizer.step()
+
+    candidate_model.eval()
+    hybrid_model = candidate_model  # Update live in-memory model immediately!
+    
+    candidate_path = os.path.join(SAVED_MODELS_DIR, "hybrid_classifier_updated_candidate.pth")
+    torch.save({
+        "model_state_dict": candidate_model.state_dict(),
+        "input_dim": 82,
+        "num_classes": 3,
+        "trained_from_doctor_feedback": True,
+        "feedback_samples": len(verified_records)
+    }, candidate_path)
+
+    # Save updated active weights to separate fine-tuned candidate file
+    torch.save({"model_state_dict": candidate_model.state_dict(), "input_dim": 82, "num_classes": 3}, os.path.join(SAVED_MODELS_DIR, "hybrid_classifier_feedback_finetuned.pth"))
+
+    print(f"[Feedback Retraining] Fine-tuned candidate model updated with {len(verified_records)} feedback records.")
+    return {
+        "success": True,
+        "message": f"Candidate Hybrid Model fine-tuned on {len(verified_records)} doctor-verified cases. Model updated successfully!"
+    }
+
+@app.route("/api/feedback/submit", methods=["POST"])
+def submit_doctor_feedback():
+    data = request.get_json() or {}
+    case_id = data.get("case_id", "")
+    filename = data.get("filename", "")
+    ai_prediction = data.get("ai_prediction", "")
+    ai_confidence = float(data.get("ai_confidence", 0.0))
+    doctor_response = str(data.get("doctor_response", "")).lower()
+    doctor_verified_class = data.get("doctor_verified_class", ai_prediction)
+    fused_features = data.get("fused_features", [])
+
+    if ai_confidence < 0.50:
+        conf_level = "Low"
+    elif ai_confidence < 0.75:
+        conf_level = "Medium"
+    else:
+        conf_level = "High"
+
+    state_str = f"('{ai_prediction}', '{conf_level}')"
+    is_correct = (doctor_response in ["yes", "y"]) or (doctor_verified_class == ai_prediction)
+    action_str = "accept_prediction" if is_correct else "request_correction"
+    reward = 1.0 if is_correct else -1.0
+
+    next_state_str = f"('{doctor_verified_class}', '{conf_level}')"
+    next_action_str = "accept_prediction" if is_correct else "model_update"
+
+    alpha = 0.10
+    gamma = 0.90
+
+    current_q = SARSA_Q_TABLE.get(state_str, {}).get(action_str, 0.0)
+    next_q = SARSA_Q_TABLE.get(next_state_str, {}).get(next_action_str, 0.0)
+    updated_q = current_q + alpha * (reward + gamma * next_q - current_q)
+
+    if state_str not in SARSA_Q_TABLE:
+        SARSA_Q_TABLE[state_str] = {}
+    SARSA_Q_TABLE[state_str][action_str] = round(updated_q, 6)
+
+    with open(SARSA_Q_PATH, "w") as f:
+        json.dump(SARSA_Q_TABLE, f, indent=2)
+
+    feedback_record = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "case_id": case_id,
+        "filename": filename,
+        "ai_prediction": ai_prediction,
+        "ai_confidence": round(ai_confidence * 100, 2),
+        "doctor_verified_class": doctor_verified_class,
+        "prediction_correct": is_correct,
+        "reward": reward,
+        "sarsa_state": state_str,
+        "sarsa_action": action_str,
+        "previous_q_value": round(current_q, 6),
+        "updated_q_value": round(updated_q, 6),
+        "fused_features": fused_features if len(fused_features) == 82 else [],
+        "feature_dimension": 82,
+        "model_update_required": not is_correct
+    }
+
+    feedback_list = []
+    if os.path.exists(FEEDBACK_JSON_PATH):
+        try:
+            with open(FEEDBACK_JSON_PATH, "r") as f:
+                feedback_list = json.load(f)
+        except Exception:
+            feedback_list = []
+
+    feedback_list.append(feedback_record)
+    with open(FEEDBACK_JSON_PATH, "w") as f:
+        json.dump(feedback_list, f, indent=2)
+
+    model_updated = False
+    update_msg = ""
+    if not is_correct:
+        retrain_res = execute_controlled_model_update(feedback_list)
+        model_updated = retrain_res.get("success", False)
+        update_msg = retrain_res.get("message", "")
+
+    return jsonify({
+        "success": True,
+        "message": f"Doctor feedback recorded (Reward: {reward}). " + (update_msg if update_msg else "Prediction verified by doctor."),
+        "reward": reward,
+        "sarsa_state": state_str,
+        "sarsa_action": action_str,
+        "previous_q_value": round(current_q, 6),
+        "updated_q_value": round(updated_q, 6),
+        "model_updated": model_updated
+    })
 
 # ---------------------------------------------------------
 # Dataset Management API Endpoints
@@ -811,27 +1175,98 @@ def get_dataset_summary():
         }
     })
 
+def image_to_base64(filepath):
+    try:
+        with open(filepath, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            ext = os.path.splitext(filepath)[1].lower()
+            mime = "image/png" if ext == ".png" else "image/jpeg"
+            return f"data:{mime};base64,{encoded_string}"
+    except Exception as e:
+        print(f"Error encoding image {filepath}: {e}")
+        return None
+
 @app.route("/api/dataset/images", methods=["GET"])
 def get_dataset_images():
-    dataset_type = request.args.get("dataset", "hospital")
+    dataset_type = request.args.get("dataset", "iq").lower()
+    category = request.args.get("category", "normal").lower()
+    limit = int(request.args.get("limit", 60))
+    
+    root_project = os.path.dirname(BASE_DIR)
     samples = []
-    if dataset_type == "hospital":
-        base_hosp = os.path.join(os.path.dirname(BASE_DIR), "DATASET")
-        if not os.path.exists(base_hosp):
-            base_hosp = os.path.join(BASE_DIR, "DATASET")
-        
-        for category in ["benign", "maligancy", "normal"]:
-            cat_dir = os.path.join(base_hosp, category)
-            if os.path.exists(cat_dir):
-                files = [f for f in os.listdir(cat_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-                for f in files[:6]:
+    
+    if dataset_type in ["hospital", "hospital_raw", "raw"]:
+        # Hospital Raw CT Dataset -> Hopital Dataset/DATASET
+        cat_map = {
+            "normal": ["normal", "Normal"],
+            "benign": ["benign", "Benign"],
+            "malignant": ["maligancy", "malignant", "Malignant"]
+        }
+        hosp_base = os.path.join(root_project, "Hopital Dataset", "DATASET")
+        if not os.path.exists(hosp_base):
+            hosp_base = os.path.join(root_project, "DATASET")
+        if not os.path.exists(hosp_base):
+            hosp_base = os.path.join(BASE_DIR, "DATASET")
+            
+        target_dirs = cat_map.get(category, cat_map["normal"])
+        found_dir = None
+        if os.path.exists(hosp_base):
+            for d in target_dirs:
+                candidate = os.path.join(hosp_base, d)
+                if os.path.exists(candidate):
+                    found_dir = candidate
+                    break
+                    
+        if found_dir:
+            files = [f for f in os.listdir(found_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            slice_files = files[:limit] if limit > 0 else files
+            for f in slice_files:
+                fpath = os.path.join(found_dir, f)
+                b64 = image_to_base64(fpath)
+                if b64:
                     samples.append({
-                        "id": f"{category}_{f}",
+                        "id": f"hosp_{category}_{f}",
                         "dataset": "Hospital Raw CT",
-                        "category": "Malignant" if category == "maligancy" else category.capitalize(),
+                        "category": category.capitalize(),
                         "filename": f,
-                        "is_test_folder": False
+                        "image_url": b64
                     })
+    else:
+        # IQ-OTH/NCCD dataset -> archive/The IQ-OTHNCCD lung cancer dataset/The IQ-OTHNCCD lung cancer dataset
+        cat_map = {
+            "normal": ["Normal cases", "Normal case", "normal"],
+            "benign": ["Bengin cases", "Benign cases", "benign"],
+            "malignant": ["Malignant cases", "Malignant case", "malignant"]
+        }
+        
+        iq_base = os.path.join(root_project, "archive", "The IQ-OTHNCCD lung cancer dataset", "The IQ-OTHNCCD lung cancer dataset")
+        if not os.path.exists(iq_base):
+            iq_base = os.path.join(BASE_DIR, "archive", "The IQ-OTHNCCD lung cancer dataset", "The IQ-OTHNCCD lung cancer dataset")
+            
+        target_dirs = cat_map.get(category, cat_map["normal"])
+        found_dir = None
+        if os.path.exists(iq_base):
+            for d in target_dirs:
+                candidate = os.path.join(iq_base, d)
+                if os.path.exists(candidate):
+                    found_dir = candidate
+                    break
+        
+        if found_dir:
+            files = [f for f in os.listdir(found_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            slice_files = files[:limit] if limit > 0 else files
+            for f in slice_files:
+                fpath = os.path.join(found_dir, f)
+                b64 = image_to_base64(fpath)
+                if b64:
+                    samples.append({
+                        "id": f"iq_{category}_{f}",
+                        "dataset": "IQ-OTH/NCCD",
+                        "category": category.capitalize(),
+                        "filename": f,
+                        "image_url": b64
+                    })
+
     return jsonify({"success": True, "images": samples})
 
 @app.route("/api/dataset/delete", methods=["POST"])
