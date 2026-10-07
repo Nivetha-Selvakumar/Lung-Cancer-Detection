@@ -1,0 +1,30 @@
+{
+  "model_key": "genetic_programming",
+  "name": "Genetic Programming (Symbolic AI)",
+  "dataset": "IQ-OTH/NCCD Lung Cancer Dataset",
+  "evaluation_scope": "Held-Out Test Set (165 Scans)",
+  "accuracy": 59.26,
+  "balanced_accuracy": 43.38,
+  "precision": 72.57,
+  "recall": 43.38,
+  "macro_f1": 42.55,
+  "weighted_f1": 54.84,
+  "confusion_matrix": [
+    [
+      24,
+      0,
+      38
+    ],
+    [
+      5,
+      1,
+      11
+    ],
+    [
+      12,
+      0,
+      71
+    ]
+  ],
+  "description": "Symbolic Evolutionary classifier on lung CT texture features."
+}

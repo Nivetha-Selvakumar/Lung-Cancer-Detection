@@ -1,0 +1,21 @@
+{
+  "source_notebook": "DL_Segemntation_Improved (1)(4).ipynb",
+  "model": "ConvNeXt-Tiny",
+  "dataset": "IQ-OTH/NCCD",
+  "classes": [
+    "Normal",
+    "Benign",
+    "Malignant"
+  ],
+  "seed": 42,
+  "original_dataset_access": "/content/drive/MyDrive/Project work 1/Dataset/archive.zip",
+  "new_dataset_access": "DATASET_ZIP_PATH environment variable or data/archive.zip",
+  "split": "70% train / 15% validation / 15% test",
+  "image_size": 224,
+  "segmentation": "Classical deterministic lung ROI extraction",
+  "training": "Stage 1 transfer learning -> Stage 2 fine-tuning -> stronger fine-tuning",
+  "tta": "Selected on validation Macro F1 only",
+  "xai": "Grad-CAM",
+  "llm": "Gemini explanation in cells 64-66",
+  "feature_selection": "None in this notebook"
+}

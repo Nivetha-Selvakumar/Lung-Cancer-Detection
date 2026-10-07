@@ -6,6 +6,10 @@ archive/
 *.rar
 *.7z
 
+Hospital Dataset/
+
+IQ Dataset/
+
 # =========================
 # Environment variables
 # =========================

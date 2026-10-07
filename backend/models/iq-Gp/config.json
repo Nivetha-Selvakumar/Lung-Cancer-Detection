@@ -1,0 +1,95 @@
+{
+  "source_notebook": "PW1_LC_Genetic_Programming(5).ipynb",
+  "dataset": "IQ-OTH/NCCD",
+  "classes": {
+    "0": "Normal",
+    "1": "Benign",
+    "2": "Malignant"
+  },
+  "split": {
+    "train": "70%",
+    "validation": "15%",
+    "test": "15%"
+  },
+  "preprocessing_cell": 11,
+  "feature_extraction_cell": 14,
+  "standardization_cell": 20,
+  "pca_cell": 21,
+  "gp_iteration_1_cell": 22,
+  "gp_iteration_1_training_cells": [
+    23,
+    24,
+    25,
+    26
+  ],
+  "gp_iteration_1_validation_cells": [
+    28,
+    29,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "automatic_iterations_cells": [
+    40,
+    41,
+    42,
+    43,
+    44,
+    45
+  ],
+  "final_validation_cells": [
+    49,
+    50,
+    51
+  ],
+  "final_test_cells": [
+    52,
+    53,
+    54,
+    55,
+    56
+  ],
+  "dataset_access_modified_cells": [
+    3,
+    4,
+    5
+  ],
+  "gp_iteration_1": {
+    "population": 300,
+    "generations": 20,
+    "metric": "log loss",
+    "parsimony_coefficient": 0.001,
+    "max_samples": 0.8,
+    "function_set": [
+      "add",
+      "sub",
+      "mul",
+      "div",
+      "sqrt",
+      "log",
+      "abs",
+      "neg"
+    ],
+    "random_states": [
+      101,
+      102,
+      103
+    ]
+  },
+  "automatic_iterations": {
+    "start": 2,
+    "number_of_iterations": 9,
+    "population": 300,
+    "balanced": true,
+    "generations_formula": "20 + (iteration - 2) * 10",
+    "random_seed_formula": "200 + iteration * 10"
+  },
+  "feature_dimension_from_notebook": 6111,
+  "pca_components": 32
+}

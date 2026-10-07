@@ -1,0 +1,16 @@
+numpy
+pandas
+opencv-python
+scipy
+scikit-image
+scikit-learn
+matplotlib
+seaborn
+joblib
+xgboost
+gplearn
+torch
+torchvision
+Pillow
+google-genai
+pytorch-grad-cam

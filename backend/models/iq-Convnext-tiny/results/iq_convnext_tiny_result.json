@@ -1,0 +1,30 @@
+{
+  "model_key": "convnext",
+  "name": "ConvNeXt-Tiny Deep Learning (Main Model)",
+  "dataset": "IQ-OTH/NCCD Lung Cancer Dataset",
+  "evaluation_scope": "Held-Out Test Set (165 Scans)",
+  "accuracy": 90.74,
+  "balanced_accuracy": 88.07,
+  "precision": 83.14,
+  "recall": 88.07,
+  "macro_f1": 84.69,
+  "weighted_f1": 91.36,
+  "confusion_matrix": [
+    [
+      53,
+      9,
+      0
+    ],
+    [
+      2,
+      14,
+      1
+    ],
+    [
+      1,
+      2,
+      80
+    ]
+  ],
+  "description": "Production Vision Transformer fine-tuned on segmented lung ROI images using Focal Loss and TTA."
+}
