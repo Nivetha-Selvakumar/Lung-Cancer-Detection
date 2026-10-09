@@ -299,9 +299,9 @@ export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictEr
               AI-Assisted Explanation (Gemini)
             </h3>
           </div>
-          <p style={{ fontSize: '0.88rem', color: '#1e40af', lineHeight: 1.65, margin: 0 }}>
+          <div style={{ fontSize: '0.88rem', color: '#1e40af', lineHeight: 1.65, whiteSpace: 'pre-line', margin: 0 }}>
             {llm_explanation?.text || `The CT image shows a well-defined nodule-like region with relatively smooth margins and no obvious signs of spiculeted edges. The highlighted area in the Grad-CAM map indicates the region that contributed most to the prediction. Based on the visual features extracted by the ConvNeXt-Tiny deep architecture, the model predicts a higher probability of ${predicted_class}.`}
-          </p>
+          </div>
         </div>
 
         {/* CARD 4: Doctor Verification & Human-in-the-Loop Feedback (SARCA & Reinforcement Learning) */}

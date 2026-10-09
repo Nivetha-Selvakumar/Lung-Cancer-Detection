@@ -9,61 +9,28 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 import sys
 import subprocess
 import json
-import argparse
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 MODELS_DIR = BASE_DIR / "models"
 
-FAST_MODELS = [
-    "hospital-xg",
-    "hospital-gp",
-    "iq-XG",
-    "iq-Gp"
-]
-
 OTHER_MODELS = [
-    "hospital-convnext-tiny",
     "hospital-xg",
     "hospital-gp",
     "iq-XG",
-    "iq-Gp"
+    "iq-Gp",
+    "hospital-convnext-tiny"
 ]
 
-ALL_MODELS = [
-    "hospital-convnext-tiny",
-    "hospital-xg",
-    "hospital-gp",
-    "iq-Convnext-tiny",
-    "iq-XG",
-    "iq-Gp"
-]
-
-def install_dependencies():
+def train_other_models():
     print("============================================================")
-    print("STEP 1: CHECKING BACKEND DEPENDENCIES")
-    print("============================================================")
-    req_file = BASE_DIR / "requirements.txt"
-    if req_file.exists():
-        cmd = [sys.executable, "-m", "pip", "install", "--user", "-r", str(req_file)]
-        print(f"Running: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=False)
-        if result.returncode == 0:
-            print("[SUCCESS] Dependencies installed successfully!")
-        else:
-            print("[NOTE] PIP return code:", result.returncode)
-    else:
-        print(f"[NOTE] Requirements file not found at {req_file}")
-
-def train_selected_models(model_folders):
-    print("\n============================================================")
-    print("STEP 2: RUNNING TRAINING FOR SELECTED MODELS")
-    print("Models to train:", ", ".join(model_folders))
+    print("TRAINING ALL MODELS EXCLUDING IQ CONVNEXT-TINY")
+    print("Models to train:", ", ".join(OTHER_MODELS))
     print("============================================================")
     
     summary_report = {}
 
-    for folder_name in model_folders:
+    for folder_name in OTHER_MODELS:
         folder_path = MODELS_DIR / folder_name
         train_script = folder_path / "train.py"
         results_dir = folder_path / "results"
@@ -109,27 +76,9 @@ def train_selected_models(model_folders):
                 print(f"[NOTE] Unable to parse {target_json}: {e}")
 
     print("\n============================================================")
-    print("TRAINING & ACCURACY REPORT GENERATION COMPLETE")
+    print("TRAINING OF OTHER MODELS COMPLETE")
     print("============================================================")
     return summary_report
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train model architectures.")
-    parser.add_argument("--fast", action="store_true", help="Train only fast models (XGBoost, GP)")
-    parser.add_argument("--skip-iq-convnext", action="store_true", help="Train all models EXCLUDING IQ ConvNeXt-Tiny")
-    parser.add_argument("--iq-convnext", action="store_true", help="Train only IQ ConvNeXt-Tiny")
-    parser.add_argument("--hospital-convnext", action="store_true", help="Train only Hospital ConvNeXt-Tiny")
-    args = parser.parse_args()
-
-    install_dependencies()
-
-    if args.fast:
-        train_selected_models(FAST_MODELS)
-    elif args.skip_iq_convnext:
-        train_selected_models(OTHER_MODELS)
-    elif args.iq_convnext:
-        train_selected_models(["iq-Convnext-tiny"])
-    elif args.hospital_convnext:
-        train_selected_models(["hospital-convnext-tiny"])
-    else:
-        train_selected_models(ALL_MODELS)
+    train_other_models()
