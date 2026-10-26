@@ -10,6 +10,9 @@ Hospital Dataset/
 
 IQ Dataset/
 
+New Dataset/
+
+
 # =========================
 # Environment variables
 # =========================
@@ -83,3 +86,6 @@ Thumbs.db
 # =========================
 *.tmp
 *.temp
+backend/test_*.png
+backend/debug_*.png
+backend/*.png

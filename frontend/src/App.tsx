@@ -24,7 +24,7 @@ function getTabFromPath(path: string): string {
   if (p === '/metrics') return 'dashboard';
   if (p === '/history') return 'history';
   if (p === '/profile') return 'profile';
-  return 'home';
+  return 'login';
 }
 
 function getPathFromTab(tab: string): string {
@@ -36,7 +36,7 @@ function getPathFromTab(tab: string): string {
     case 'dashboard': return '/metrics';
     case 'history': return '/history';
     case 'profile': return '/profile';
-    default: return '/dashboard';
+    default: return '/login';
   }
 }
 
@@ -82,6 +82,9 @@ export const App: React.FC = () => {
     const handlePopState = () => {
       const tab = getTabFromPath(window.location.pathname);
       setActiveTab(tab);
+      if (tab === 'login' && window.location.pathname !== '/login') {
+        window.history.replaceState({}, '', '/login');
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -89,14 +92,20 @@ export const App: React.FC = () => {
 
   // Sync initial URL path on load or after auth change
   useEffect(() => {
+    const validPaths = ['/dashboard', '/home', '/predict', '/dataset', '/metrics', '/history', '/profile'];
+    const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '');
+
     if (!currentUser || !authToken) {
       if (window.location.pathname !== '/login') {
         window.history.replaceState({}, '', '/login');
       }
+      setActiveTab('login');
     } else {
-      if (window.location.pathname === '/' || window.location.pathname === '/login') {
-        window.history.replaceState({}, '', '/dashboard');
-        setActiveTab('home');
+      if (!validPaths.includes(currentPath)) {
+        if (window.location.pathname !== '/login') {
+          window.history.replaceState({}, '', '/login');
+        }
+        setActiveTab('login');
       }
     }
   }, [currentUser, authToken]);
@@ -161,6 +170,8 @@ export const App: React.FC = () => {
   const handleLoginSuccess = (user: UserProfile, token: string) => {
     setCurrentUser(user);
     setAuthToken(token);
+    setPredictData(null);
+    setPredictError(null);
     localStorage.setItem('lung_ai_token', token);
     localStorage.setItem('lung_ai_user', JSON.stringify(user));
     navigateToTab('home');
@@ -178,6 +189,8 @@ export const App: React.FC = () => {
     }
     setCurrentUser(null);
     setAuthToken(null);
+    setPredictData(null);
+    setPredictError(null);
     localStorage.removeItem('lung_ai_user');
     localStorage.removeItem('lung_ai_token');
     setLogoutLoading(false);
@@ -187,8 +200,8 @@ export const App: React.FC = () => {
     }
   };
 
-  // If user is not authenticated, render LoginPage Screen on /login
-  if (!currentUser || !authToken) {
+  // If user is not authenticated or on login page, render LoginPage Screen on /login
+  if (!currentUser || !authToken || activeTab === 'login') {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
@@ -252,6 +265,10 @@ export const App: React.FC = () => {
             loading={loading}
             onFileSelect={handleFileSelect}
             onClearError={() => setPredictError(null)}
+            onReset={() => {
+              setPredictData(null);
+              setPredictError(null);
+            }}
           />
         )}
 

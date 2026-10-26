@@ -217,7 +217,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ currentUser, onNavigate }) =
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Dataset Overview</h3>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>PSG-IQ Dataset Overview</h3>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>1,167 Total Unique CT Cases</span>
+              </div>
               <button
                 onClick={() => onNavigate('dataset')}
                 style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer' }}
@@ -239,35 +242,35 @@ export const HomeView: React.FC<HomeViewProps> = ({ currentUser, onNavigate }) =
                     stroke="#f1f5f9"
                     strokeWidth="3.8"
                   />
-                  {/* Normal (Green: 120 / 372 = 32.2%) */}
+                  {/* Normal (Green: 436 / 1167 = 37.4%) */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="#10b981"
                     strokeWidth="3.8"
-                    strokeDasharray="32.2, 100"
+                    strokeDasharray="37.4, 100"
                   />
-                  {/* Benign (Blue: 134 / 372 = 36.0%) */}
+                  {/* Benign (Blue: 147 / 1167 = 12.6%) */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="#3b82f6"
                     strokeWidth="3.8"
-                    strokeDasharray="36.0, 100"
-                    strokeDashoffset="-32.2"
+                    strokeDasharray="12.6, 100"
+                    strokeDashoffset="-37.4"
                   />
-                  {/* Malignant (Red: 118 / 372 = 31.8%) */}
+                  {/* Malignant (Red: 584 / 1167 = 50.0%) */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="#ef4444"
                     strokeWidth="3.8"
-                    strokeDasharray="31.8, 100"
-                    strokeDashoffset="-68.2"
+                    strokeDasharray="50.0, 100"
+                    strokeDashoffset="-50.0"
                   />
                 </svg>
                 <div style={{ position: 'absolute', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>372</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>1,167</div>
                   <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>CT Scans</div>
                 </div>
               </div>
@@ -279,7 +282,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ currentUser, onNavigate }) =
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
                     <span style={{ color: '#475569' }}>Normal</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>120</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>436</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -287,7 +290,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ currentUser, onNavigate }) =
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }} />
                     <span style={{ color: '#475569' }}>Benign</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>134</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>147</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -295,7 +298,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ currentUser, onNavigate }) =
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
                     <span style={{ color: '#475569' }}>Malignant</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>118</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>584</span>
                 </div>
               </div>
             </div>

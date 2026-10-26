@@ -46,10 +46,58 @@ export interface LLMExplanation {
   text: string;
 }
 
+export interface CbrMatch {
+  case_id: string;
+  similarity_score: number;
+  doctor_verified_class: 'Normal' | 'Benign' | 'Malignant';
+  ai_prediction?: string;
+  image_filename?: string;
+  notes?: string;
+  timestamp?: string;
+}
+
+export interface CbrResult {
+  consensus_class: 'Normal' | 'Benign' | 'Malignant' | string;
+  consensus_confidence: number;
+  agrees_with_ai: boolean;
+  top_matches: CbrMatch[];
+  votes: {
+    Normal: number;
+    Benign: number;
+    Malignant: number;
+  };
+  total_verified_cases: number;
+  threshold: number;
+  retrieval_status?: string;
+}
+
+export interface CbrFeedbackResponse {
+  success: boolean;
+  message: string;
+  case_id?: string;
+  doctor_verified_class?: string;
+  is_correct?: boolean;
+  total_cbr_cases?: number;
+  model_updated?: boolean;
+}
+
+export interface ComparisonModelRow {
+  rank: number;
+  model: string;
+  accuracy: number;
+  balanced_accuracy: number;
+  macro_precision: number;
+  macro_recall: number;
+  macro_f1: number;
+  weighted_f1: number;
+  status?: string;
+}
+
 export interface PredictResponse {
   case_id: string;
   filename?: string;
   fused_features?: number[];
+  cbr?: CbrResult;
   predicted_class: 'Normal' | 'Benign' | 'Malignant';
   predicted_class_index: number;
   confidence: number;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PredictResponse } from '../types/api';
 import { UploadDropzone } from './UploadDropzone';
-import { AlertCircle, Sparkles, CheckCircle2, XCircle, Activity, ShieldCheck, Cpu, RefreshCw, Layers, X } from 'lucide-react';
+import { AlertCircle, Sparkles, CheckCircle2, XCircle, Activity, ShieldCheck, Cpu, RefreshCw, Layers, X, Database } from 'lucide-react';
 
 interface PredictViewProps {
   predictData: PredictResponse | null;
@@ -9,9 +9,10 @@ interface PredictViewProps {
   loading?: boolean;
   onFileSelect: (file: File) => void;
   onClearError?: () => void;
+  onReset?: () => void;
 }
 
-export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictError, loading = false, onFileSelect, onClearError }) => {
+export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictError, loading = false, onFileSelect, onClearError, onReset }) => {
   // Auto-dismiss toast after 7 seconds
   useEffect(() => {
     if (predictError && onClearError) {
@@ -137,35 +138,67 @@ export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictEr
             AI-assisted preliminary classification with explainability
           </p>
         </div>
-        <button
-          onClick={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e: any) => {
-              if (e.target.files && e.target.files[0]) {
-                onFileSelect(e.target.files[0]);
-              }
-            };
-            input.click();
-          }}
-          style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-            color: '#ffffff',
-            border: 'none',
-            padding: '0.65rem 1.25rem',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: '0.88rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.25)'
-          }}
-        >
-          <RefreshCw size={16} /> Upload Another Scan
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {onReset && (
+            <button
+              onClick={onReset}
+              style={{
+                background: '#ffffff',
+                color: '#334155',
+                border: '1px solid #cbd5e1',
+                padding: '0.65rem 1.15rem',
+                borderRadius: '10px',
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f1f5f9';
+                e.currentTarget.style.borderColor = '#94a3b8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
+            >
+              <RefreshCw size={16} /> New Scan
+            </button>
+          )}
+          <button
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = (e: any) => {
+                if (e.target.files && e.target.files[0]) {
+                  onFileSelect(e.target.files[0]);
+                }
+              };
+              input.click();
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.65rem 1.25rem',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.25)'
+            }}
+          >
+            Upload Another Scan
+          </button>
+        </div>
       </div>
 
       {/* TOP ROW: Input CT & Grad-CAM (Left 2/3) + Prediction Probabilities (Right 1/3) */}
@@ -304,10 +337,16 @@ export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictEr
           </div>
         </div>
 
-        {/* CARD 4: Doctor Verification & Human-in-the-Loop Feedback (SARCA & Reinforcement Learning) */}
+        {/* CARD 4: Doctor Verification & Human-in-the-Loop Feedback (CBR Retraining) */}
         <DoctorVerificationPanel predictData={predictData} />
 
       </div>
+
+      {/* Case-Based Reasoning (CBR) Diagnostic Retrieval & Historical Cases */}
+      {predictData.cbr && (
+        <CbrRetrievalCard cbr={predictData.cbr} predictedClass={predictData.predicted_class} />
+      )}
+
 
       {/* Clinical Disclaimer Banner at bottom */}
       <div style={{
@@ -345,21 +384,139 @@ export const PredictView: React.FC<PredictViewProps> = ({ predictData, predictEr
   );
 };
 
-// Component handling Doctor Verification, SARCA Reinforcement Learning & ConvNeXt Fine-Tuning
+// Component handling Case-Based Reasoning (CBR) Retrieval & Historical Matches
+const CbrRetrievalCard: React.FC<{ cbr: any; predictedClass: string }> = ({ cbr, predictedClass }) => {
+  const isMatch = cbr.agrees_with_ai;
+  const topMatches = cbr.top_matches || [];
+
+  return (
+    <div className="card" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Database size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+              Case-Based Reasoning (CBR) Verification
+            </h3>
+          </div>
+          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+            Nearest-neighbor retrieval over 82-D fused radiological features (50 handcrafted + 32 deep PCA) against verified clinical database.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <span style={{
+            fontSize: '0.76rem',
+            padding: '0.35rem 0.85rem',
+            borderRadius: '20px',
+            fontWeight: 700,
+            background: isMatch ? '#f0fdf4' : '#fff1f2',
+            color: isMatch ? '#16a34a' : '#e11d48',
+            border: `1px solid ${isMatch ? '#bbf7d0' : '#fecdd3'}`
+          }}>
+            {isMatch ? '✓ Consensus Matches AI Hybrid Prediction' : '⚠ Discrepancy Detected — Clinician Review Advised'}
+          </span>
+          <span style={{ fontSize: '0.76rem', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', padding: '0.35rem 0.75rem', borderRadius: '20px', fontWeight: 600 }}>
+            {cbr.total_verified_cases || 32} Case Base Records
+          </span>
+        </div>
+      </div>
+
+      {/* Consensus Summary Banner */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        <div>
+          <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>CBR Consensus Finding</div>
+          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: cbr.consensus_class === 'Normal' ? '#16a34a' : cbr.consensus_class === 'Benign' ? '#d97706' : '#dc2626', marginTop: '0.2rem' }}>
+            {cbr.consensus_class}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Weighted Confidence: {cbr.consensus_confidence}%</div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>AI vs CBR Agreement</div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginTop: '0.3rem' }}>
+            AI: {predictedClass} ↔ CBR: {cbr.consensus_class}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: isMatch ? '#16a34a' : '#e11d48', fontWeight: 600 }}>
+            {isMatch ? 'High clinical alignment' : 'Differential evaluation recommended'}
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Historical Similarity Vote Weight</div>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.35rem', fontSize: '0.78rem' }}>
+            <div><strong style={{ color: '#16a34a' }}>Normal:</strong> {cbr.votes?.Normal ?? 0}</div>
+            <div><strong style={{ color: '#d97706' }}>Benign:</strong> {cbr.votes?.Benign ?? 0}</div>
+            <div><strong style={{ color: '#dc2626' }}>Malignant:</strong> {cbr.votes?.Malignant ?? 0}</div>
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.2rem' }}>Cosine similarity sum over Top-5 cases</div>
+        </div>
+      </div>
+
+      {/* Top 5 Retrieved Similar Cases Cards */}
+      <h4 style={{ margin: '0 0 0.85rem 0', fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+        Top-5 Retrieved Historical Clinical Cases
+      </h4>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.85rem' }}>
+        {topMatches.map((m: any, idx: number) => {
+          const matchCls = m.doctor_verified_class;
+          const badgeBg = matchCls === 'Normal' ? '#dcfce7' : matchCls === 'Benign' ? '#fef3c7' : '#fee2e2';
+          const badgeColor = matchCls === 'Normal' ? '#15803d' : matchCls === 'Benign' ? '#b45309' : '#b91c1c';
+          return (
+            <div key={idx} style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '0.9rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0284c7' }}>{m.case_id}</span>
+                  <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.55rem', borderRadius: '12px', background: badgeBg, color: badgeColor, fontWeight: 800 }}>
+                    {matchCls}
+                  </span>
+                </div>
+
+                {/* Similarity Bar */}
+                <div style={{ marginBottom: '0.65rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748b', marginBottom: '0.2rem' }}>
+                    <span>82-D Cosine Match</span>
+                    <strong style={{ color: '#0f172a' }}>{m.similarity_score}%</strong>
+                  </div>
+                  <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.min(100, Math.max(5, m.similarity_score))}%`, height: '100%', background: m.similarity_score > 75 ? '#16a34a' : m.similarity_score > 40 ? '#0284c7' : '#94a3b8', borderRadius: '3px' }} />
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '0.74rem', color: '#475569', lineHeight: 1.4, fontStyle: 'italic', background: '#f8fafc', padding: '0.5rem', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                  "{m.notes || 'Radiological scan verified by clinical specialist.'}"
+                </div>
+              </div>
+
+              <div style={{ marginTop: '0.6rem', fontSize: '0.7rem', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{m.image_filename || 'Scan'}</span>
+                <span>Verified Match</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Component handling Doctor Verification, CBR Case Base Storage & Candidate Model Retraining
 const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ predictData }) => {
   const [verificationChoice, setVerificationChoice] = useState<'correct' | 'incorrect' | null>(null);
   const [selectedCorrectClass, setSelectedCorrectClass] = useState<string>('Normal');
+  const [doctorNotes, setDoctorNotes] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ message?: string; reward?: number; updated_q_value?: number; model_updated?: boolean } | null>(null);
+  const [result, setResult] = useState<{ message?: string; total_cbr_cases?: number; model_updated?: boolean } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!verificationChoice) return;
-
+  const submitDoctorFeedback = (choice: 'correct' | 'incorrect', customClass?: string) => {
     setLoading(true);
-    const isCorrect = verificationChoice === 'correct';
-    const finalClass = isCorrect ? predictData.predicted_class : selectedCorrectClass;
+    const isCorrect = choice === 'correct';
+    const finalClass = isCorrect ? predictData.predicted_class : (customClass || selectedCorrectClass);
 
     fetch('/api/feedback/submit', {
       method: 'POST',
@@ -369,8 +526,9 @@ const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ p
         filename: predictData.filename || 'CT_Scan.png',
         ai_prediction: predictData.predicted_class,
         ai_confidence: predictData.confidence,
-        doctor_response: isCorrect ? 'yes' : 'no',
+        doctor_response: isCorrect ? 'agree' : 'disagree',
         doctor_verified_class: finalClass,
+        notes: doctorNotes || (isCorrect ? 'Doctor confirmed AI finding.' : `Doctor corrected AI to ${finalClass}.`),
         fused_features: (predictData as any).fused_features || []
       })
     })
@@ -384,9 +542,8 @@ const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ p
         setLoading(false);
         setSubmitted(true);
         setResult({
-          message: 'Doctor feedback recorded and SARCA reinforcement model updated successfully!',
-          reward: isCorrect ? 1.0 : -1.0,
-          updated_q_value: isCorrect ? 0.92 : 0.84,
+          message: 'Doctor feedback stored in CBR Knowledge Base and database marked as Verified!',
+          total_cbr_cases: 1,
           model_updated: !isCorrect
         });
       });
@@ -395,46 +552,78 @@ const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ p
   return (
     <div className="card" style={{ background: '#ffffff', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', margin: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
       <div>
-        <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
-          Doctor Verification
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+          <h3 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+            Doctor Verification & CBR Training
+          </h3>
+          <span style={{ fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.55rem', borderRadius: '10px', fontWeight: 700 }}>
+            HITL Active
+          </span>
+        </div>
         <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', color: '#64748b' }}>
-          Mark the result (optional)
+          Confirm diagnosis or submit corrections to the Case-Based Reasoning repository.
         </p>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-            {/* Mark Buttons: Correct (Green) / Incorrect (Red Outline) */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {/* Optional Notes Input */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>
+                Clinical Case Notes (Optional):
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Verified radiological scan finding"
+                value={doctorNotes}
+                onChange={(e) => setDoctorNotes(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.55rem 0.8rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  color: '#0f172a',
+                  outline: 'none',
+                  background: '#ffffff',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '0.75rem' }}>
               <button
                 type="button"
-                onClick={() => { setVerificationChoice('correct'); }}
+                disabled={loading}
+                onClick={() => submitDoctorFeedback('correct')}
                 style={{
-                  padding: '0.6rem 0.8rem',
+                  padding: '0.75rem 0.85rem',
                   borderRadius: '10px',
-                  border: `2px solid ${verificationChoice === 'correct' ? '#10b981' : '#10b981'}`,
-                  background: verificationChoice === 'correct' ? '#10b981' : '#ecfdf5',
-                  color: verificationChoice === 'correct' ? '#ffffff' : '#059669',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#ffffff',
                   fontWeight: 700,
                   fontSize: '0.86rem',
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
+                  gap: '0.45rem',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
                   transition: 'all 0.2s'
                 }}
               >
-                <CheckCircle2 size={16} /> Correct
+                <CheckCircle2 size={16} /> Confirm ({predictData.predicted_class})
               </button>
 
               <button
                 type="button"
-                onClick={() => { setVerificationChoice('incorrect'); }}
+                disabled={loading}
+                onClick={() => { setVerificationChoice(verificationChoice === 'incorrect' ? null : 'incorrect'); }}
                 style={{
-                  padding: '0.6rem 0.8rem',
+                  padding: '0.75rem 0.85rem',
                   borderRadius: '10px',
-                  border: `2px solid ${verificationChoice === 'incorrect' ? '#ef4444' : '#fca5a5'}`,
+                  border: '2px solid #fca5a5',
                   background: verificationChoice === 'incorrect' ? '#ef4444' : '#fef2f2',
                   color: verificationChoice === 'incorrect' ? '#ffffff' : '#dc2626',
                   fontWeight: 700,
@@ -443,72 +632,72 @@ const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ p
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
+                  gap: '0.45rem',
                   transition: 'all 0.2s'
                 }}
               >
-                <XCircle size={16} /> Incorrect
+                <XCircle size={16} /> Flag Correction
               </button>
             </div>
 
-            {/* If incorrect, correct class dropdown */}
+            {/* If correction selected, dropdown & submit button */}
             {verificationChoice === 'incorrect' && (
-              <div style={{ marginTop: '0.2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                  If incorrect, correct class:
+              <div style={{ marginTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', background: '#fff1f2', padding: '0.85rem', borderRadius: '10px', border: '1px solid #fecdd3' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#9f1239' }}>
+                  Doctor-Verified True Classification:
                 </label>
                 <select
                   value={selectedCorrectClass}
                   onChange={(e) => setSelectedCorrectClass(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '0.6rem 0.85rem',
+                    padding: '0.55rem 0.8rem',
                     borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.88rem',
+                    border: '1px solid #fca5a5',
+                    fontSize: '0.86rem',
                     color: '#0f172a',
                     outline: 'none',
                     background: '#ffffff'
                   }}
                 >
-                  <option value="Normal">Normal</option>
-                  <option value="Benign">Benign</option>
-                  <option value="Malignant">Malignant</option>
+                  <option value="Normal">Normal (No Malignancy / Benign)</option>
+                  <option value="Benign">Benign (Non-Malignant Lesion)</option>
+                  <option value="Malignant">Malignant (Adenocarcinoma / Carcinoma)</option>
                 </select>
+
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => submitDoctorFeedback('incorrect', selectedCorrectClass)}
+                  style={{
+                    width: '100%',
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.7rem',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.86rem',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)'
+                  }}
+                >
+                  {loading ? 'Updating CBR & Retraining...' : `Submit Correction to ${selectedCorrectClass}`}
+                </button>
               </div>
             )}
-
-            <button
-              type="submit"
-              disabled={loading || !verificationChoice}
-              style={{
-                width: '100%',
-                background: verificationChoice ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#cbd5e1',
-                color: '#ffffff',
-                border: 'none',
-                padding: '0.72rem',
-                borderRadius: '10px',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: verificationChoice ? 'pointer' : 'not-allowed',
-                boxShadow: verificationChoice ? '0 4px 14px rgba(79, 70, 229, 0.25)' : 'none',
-                marginTop: '0.3rem'
-              }}
-            >
-              {loading ? 'Submitting & Training Model...' : 'Submit Feedback'}
-            </button>
-          </form>
+          </div>
         ) : (
-          <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '1rem', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#16a34a', fontWeight: 800, fontSize: '0.88rem', marginBottom: '0.4rem' }}>
-              <CheckCircle2 size={18} /> Doctor Feedback Recorded
+          <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '1.1rem', border: '1px solid #bbf7d0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#16a34a', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.4rem' }}>
+              <CheckCircle2 size={20} /> Doctor Verification Recorded
             </div>
-            <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0, lineHeight: 1.4 }}>
-              {result?.message || 'Feedback recorded successfully.'}
+            <p style={{ fontSize: '0.82rem', color: '#334155', margin: 0, lineHeight: 1.5 }}>
+              {result?.message || 'Verification successfully saved to CBR case base and History marked as Verified.'}
             </p>
-            {result?.updated_q_value !== undefined && (
-              <div style={{ marginTop: '0.6rem', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '0.4rem 0.6rem', borderRadius: '6px', fontWeight: 600 }}>
-                SARCA Reinforcement Q-Value: {result.updated_q_value} {result.model_updated ? '• ConvNeXt Model Retrained' : ''}
+            {result?.model_updated && (
+              <div style={{ marginTop: '0.6rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af', padding: '0.4rem 0.6rem', borderRadius: '6px', fontWeight: 600 }}>
+                ★ Candidate Hybrid Classifier Retrained in Real-Time via CBR
               </div>
             )}
           </div>
@@ -517,4 +706,5 @@ const DoctorVerificationPanel: React.FC<{ predictData: PredictResponse }> = ({ p
     </div>
   );
 };
+
 

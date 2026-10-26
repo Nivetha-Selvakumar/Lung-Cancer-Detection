@@ -1,0 +1,54 @@
+test_index,source_dataset,filename,split,class,file_size_kb,rel_path
+1,PSG IMSR Hospital Testing Cohort,PIC 14.png,Testing,Normal,264.61,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 14.png
+2,PSG IMSR Hospital Testing Cohort,PIC 4 .png,Testing,Normal,221.89,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 4 .png
+3,PSG IMSR Hospital Testing Cohort,PIC 5.png,Testing,Normal,227.63,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 5.png
+4,PSG IMSR Hospital Testing Cohort,PIC 7.png,Testing,Normal,280.67,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 7.png
+5,PSG IMSR Hospital Testing Cohort,PIC 8.png,Testing,Normal,283.78,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 8.png
+6,PSG IMSR Hospital Testing Cohort,PIC 9.png,Testing,Normal,246.39,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\PIC 9.png
+7,PSG IMSR Hospital Testing Cohort,pic 10.png,Testing,Normal,287.24,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 10.png
+8,PSG IMSR Hospital Testing Cohort,pic 11.png,Testing,Normal,314.24,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 11.png
+9,PSG IMSR Hospital Testing Cohort,pic 12.png,Testing,Normal,238.87,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 12.png
+10,PSG IMSR Hospital Testing Cohort,pic 13.png,Testing,Normal,272.97,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 13.png
+11,PSG IMSR Hospital Testing Cohort,pic 15.png,Testing,Normal,291.51,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 15.png
+12,PSG IMSR Hospital Testing Cohort,pic 2.png,Testing,Normal,252.54,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 2.png
+13,PSG IMSR Hospital Testing Cohort,pic 3.png,Testing,Normal,310.65,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 3.png
+14,PSG IMSR Hospital Testing Cohort,pic 6.png,Testing,Normal,278.2,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\pic 6.png
+15,PSG IMSR Hospital Testing Cohort,picture 1 .png,Testing,Normal,306.13,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\normal\picture 1 .png
+16,PSG IMSR Hospital Testing Cohort,Picture1.png,Testing,Benign,196.54,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture1.png
+17,PSG IMSR Hospital Testing Cohort,Picture10.png,Testing,Benign,272.17,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture10.png
+18,PSG IMSR Hospital Testing Cohort,Picture11.png,Testing,Benign,275.08,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture11.png
+19,PSG IMSR Hospital Testing Cohort,Picture12.png,Testing,Benign,234.02,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture12.png
+20,PSG IMSR Hospital Testing Cohort,Picture13.png,Testing,Benign,236.95,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture13.png
+21,PSG IMSR Hospital Testing Cohort,Picture14.png,Testing,Benign,259.36,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture14.png
+22,PSG IMSR Hospital Testing Cohort,Picture15.png,Testing,Benign,267.77,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture15.png
+23,PSG IMSR Hospital Testing Cohort,Picture16.png,Testing,Benign,261.33,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture16.png
+24,PSG IMSR Hospital Testing Cohort,Picture17.png,Testing,Benign,271.27,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture17.png
+25,PSG IMSR Hospital Testing Cohort,Picture18.png,Testing,Benign,268.91,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture18.png
+26,PSG IMSR Hospital Testing Cohort,Picture19.png,Testing,Benign,196.65,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture19.png
+27,PSG IMSR Hospital Testing Cohort,Picture2.png,Testing,Benign,199.73,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture2.png
+28,PSG IMSR Hospital Testing Cohort,Picture20.png,Testing,Benign,279.4,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture20.png
+29,PSG IMSR Hospital Testing Cohort,Picture3.png,Testing,Benign,268.75,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture3.png
+30,PSG IMSR Hospital Testing Cohort,Picture4.png,Testing,Benign,283.94,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture4.png
+31,PSG IMSR Hospital Testing Cohort,Picture5.png,Testing,Benign,115.15,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture5.png
+32,PSG IMSR Hospital Testing Cohort,Picture6.png,Testing,Benign,194.41,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture6.png
+33,PSG IMSR Hospital Testing Cohort,Picture7.png,Testing,Benign,237.76,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture7.png
+34,PSG IMSR Hospital Testing Cohort,Picture8.png,Testing,Benign,265.14,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture8.png
+35,PSG IMSR Hospital Testing Cohort,Picture9.png,Testing,Benign,246.09,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\benign\Picture9.png
+36,PSG IMSR Hospital Testing Cohort,Picture1.png,Testing,Malignant,157.67,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture1.png
+37,PSG IMSR Hospital Testing Cohort,Picture10.png,Testing,Malignant,268.53,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture10.png
+38,PSG IMSR Hospital Testing Cohort,Picture11.png,Testing,Malignant,274.63,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture11.png
+39,PSG IMSR Hospital Testing Cohort,Picture12.png,Testing,Malignant,145.3,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture12.png
+40,PSG IMSR Hospital Testing Cohort,Picture13.png,Testing,Malignant,156.34,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture13.png
+41,PSG IMSR Hospital Testing Cohort,Picture14.png,Testing,Malignant,151.99,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture14.png
+42,PSG IMSR Hospital Testing Cohort,Picture15.png,Testing,Malignant,157.9,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture15.png
+43,PSG IMSR Hospital Testing Cohort,Picture16.png,Testing,Malignant,56.97,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture16.png
+44,PSG IMSR Hospital Testing Cohort,Picture17.png,Testing,Malignant,155.22,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture17.png
+45,PSG IMSR Hospital Testing Cohort,Picture18.png,Testing,Malignant,139.44,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture18.png
+46,PSG IMSR Hospital Testing Cohort,Picture2.png,Testing,Malignant,143.72,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture2.png
+47,PSG IMSR Hospital Testing Cohort,Picture3.png,Testing,Malignant,82.64,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture3.png
+48,PSG IMSR Hospital Testing Cohort,Picture4.png,Testing,Malignant,114.21,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture4.png
+49,PSG IMSR Hospital Testing Cohort,Picture5.png,Testing,Malignant,124.23,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture5.png
+50,PSG IMSR Hospital Testing Cohort,Picture6.png,Testing,Malignant,74.96,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture6.png
+51,PSG IMSR Hospital Testing Cohort,Picture7.png,Testing,Malignant,82.25,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture7.png
+52,PSG IMSR Hospital Testing Cohort,Picture8.png,Testing,Malignant,123.56,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture8.png
+53,PSG IMSR Hospital Testing Cohort,Picture9.png,Testing,Malignant,113.25,New Dataset\PSG-IQ Lung CT Dataset\PSG IMSR Dataset Testing\maligancy\Picture9.png

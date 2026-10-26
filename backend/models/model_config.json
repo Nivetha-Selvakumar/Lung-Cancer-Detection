@@ -1,0 +1,31 @@
+{
+    "project": "Lung CT Classification",
+    "dataset": "PSG-IQ Lung CT Dataset",
+    "classes": [
+        "Normal",
+        "Benign",
+        "Malignant"
+    ],
+    "models": [
+        "Genetic Programming",
+        "XGBoost",
+        "ConvNeXt-Tiny",
+        "Hybrid Classifier"
+    ],
+    "handcrafted_features": 50,
+    "convnext_deep_features": 768,
+    "pca_components": 32,
+    "hybrid_input_features": 82,
+    "image_size": [
+        224,
+        224
+    ],
+    "seed": 42,
+    "segmentation": "Existing segment_lung function; unchanged",
+    "python_libraries": {
+        "torch": "2.11.0+cpu",
+        "torchvision": "0.26.0+cpu",
+        "scikit_learn": "1.9.1",
+        "xgboost": "3.4.1"
+    }
+}

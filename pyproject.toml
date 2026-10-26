@@ -1,0 +1,16 @@
+[tool.pyrefly]
+project-includes = ["."]
+project-excludes = [
+    "**/ipynb/**",
+    "**/*.ipynb",
+    "ipynb/**"
+]
+search-path = [
+    "backend",
+    "backend/models",
+    "backend/models/human_in_loop"
+]
+
+[tool.pyrefly.errors]
+untyped-import = "ignore"
+

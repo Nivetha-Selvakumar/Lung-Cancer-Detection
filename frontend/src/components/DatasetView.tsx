@@ -68,7 +68,7 @@ export const DatasetView: React.FC = () => {
 
   const datasets: Record<'iq' | 'hospital', DatasetDetail> = {
     iq: {
-      name: 'IQ-OTH/NCCD Lung Cancer Dataset',
+      name: 'IQ-OTH/NCCD Cohort (Training & Validation)',
       total: 1097,
       classes: {
         normal: { train: 374, test: 42, total: 416, pct: 37.9 },
@@ -77,7 +77,7 @@ export const DatasetView: React.FC = () => {
       }
     },
     hospital: {
-      name: 'Hospital Raw CT Dataset',
+      name: 'PSGIMSR Hospital Cohort (External Testing)',
       total: 70,
       classes: {
         normal: { train: 15, test: 5, total: 20, pct: 28.6 },
@@ -93,52 +93,65 @@ export const DatasetView: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontFamily: "'Inter', -apple-system, sans-serif" }}>
       
-      {/* 1. Page Title Header (NO Upload Dataset Button as requested) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em' }}>
-            Dataset Management
-          </h1>
-          <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
-            Manage training data and raw CT datasets for model benchmarking
-          </p>
-        </div>
+      {/* 1. Single Unified Dataset Header */}
+      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', borderRadius: '20px', padding: '1.75rem 2rem', color: '#ffffff', boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.3)', border: '1px solid #312e81' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ background: '#4f46e5', color: '#ffffff', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Single Unified Dataset
+              </span>
+              <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#cbd5e1', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                Location: New Dataset/PSG-IQ Lung CT Dataset
+              </span>
+            </div>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 900, margin: '0 0 0.4rem 0', letterSpacing: '-0.02em', color: '#ffffff' }}>
+              PSG-IQ Lung CT Dataset
+            </h1>
+            <p style={{ fontSize: '0.92rem', color: '#cbd5e1', margin: 0, maxWidth: '780px', lineHeight: 1.5 }}>
+              Unified CT dataset containing <strong>1,167 total unique cases</strong> divided into 2 cohort types: <strong>IQ-OTH/NCCD Cohort</strong> (used for training, validation & internal testing) and <strong>PSGIMSR Hospital Cohort</strong> (53 internal balance test + 17 external held-out test). Each image represents a unique patient case.
+            </p>
+          </div>
 
-        {/* Dataset Switcher Tabs */}
-        <div style={{ display: 'flex', gap: '0.4rem', background: '#e2e8f0', padding: '0.3rem', borderRadius: '12px' }}>
-          <button
-            onClick={() => setSelectedDataset('iq')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '9px',
-              border: 'none',
-              background: selectedDataset === 'iq' ? '#4f46e5' : 'transparent',
-              color: selectedDataset === 'iq' ? '#ffffff' : '#475569',
-              fontWeight: selectedDataset === 'iq' ? 700 : 600,
-              fontSize: '0.84rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            IQ-OTH/NCCD Dataset (1097)
-          </button>
+          {/* Sub-cohort View Switcher Tabs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.4rem', borderRadius: '14px', border: '1px solid #334155' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, paddingLeft: '0.4rem', textTransform: 'uppercase' }}>Select Cohort Type</div>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <button
+                onClick={() => setSelectedDataset('iq')}
+                style={{
+                  padding: '0.6rem 1.1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: selectedDataset === 'iq' ? '#4f46e5' : 'transparent',
+                  color: selectedDataset === 'iq' ? '#ffffff' : '#94a3b8',
+                  fontWeight: selectedDataset === 'iq' ? 800 : 600,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                IQ-OTH/NCCD Cohort (1,097)
+              </button>
 
-          <button
-            onClick={() => setSelectedDataset('hospital')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              borderRadius: '9px',
-              border: 'none',
-              background: selectedDataset === 'hospital' ? '#4f46e5' : 'transparent',
-              color: selectedDataset === 'hospital' ? '#ffffff' : '#475569',
-              fontWeight: selectedDataset === 'hospital' ? 700 : 600,
-              fontSize: '0.84rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            Raw Dataset (Hospital - 70)
-          </button>
+              <button
+                onClick={() => setSelectedDataset('hospital')}
+                style={{
+                  padding: '0.6rem 1.1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: selectedDataset === 'hospital' ? '#4f46e5' : 'transparent',
+                  color: selectedDataset === 'hospital' ? '#ffffff' : '#94a3b8',
+                  fontWeight: selectedDataset === 'hospital' ? 800 : 600,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                PSGIMSR Cohort (70)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,0 +1,73 @@
+{
+  "dataset": "PSG-IQ Unified Lung CT Dataset (1150 Images)",
+  "total_cases": 1150,
+  "training_validation_samples": 1097,
+  "training_validation_source": "IQ-OTHNCCD Multi-Class Cohort (416 Normal, 120 Benign, 561 Malignant)",
+  "test_samples": 110,
+  "test_cohort_source": "Clinical Benchmark Test Cohort (110 Unseen Multi-Class Scans)",
+  "split_formula": "1,097 Benchmark Scans: 767 Train (70%) + 220 Val (20%) + 110 Test (10%) | 53 Hospital Scans for CBR Adaptation",
+  "metric_unit": "percentage",
+  "comparison_table": [
+    {
+      "rank": 1,
+      "model": "Hybrid Classifier - First-Tuned",
+      "accuracy": 95.45,
+      "balanced_accuracy": 88.29,
+      "macro_precision": 93.4,
+      "macro_recall": 88.29,
+      "macro_f1": 90.25,
+      "weighted_f1": 95.21,
+      "status": "Selected Champion Model"
+    },
+    {
+      "rank": 2,
+      "model": "Hybrid Classifier - Second-Tuned",
+      "accuracy": 93.64,
+      "balanced_accuracy": 92.66,
+      "macro_precision": 93.57,
+      "macro_recall": 92.66,
+      "macro_f1": 93.0,
+      "weighted_f1": 93.59
+    },
+    {
+      "rank": 3,
+      "model": "Hybrid Classifier - Baseline",
+      "accuracy": 87.27,
+      "balanced_accuracy": 83.53,
+      "macro_precision": 81.48,
+      "macro_recall": 83.53,
+      "macro_f1": 82.33,
+      "weighted_f1": 87.36
+    },
+    {
+      "rank": 4,
+      "model": "XGBoost - Fine-Tuned",
+      "accuracy": 85.45,
+      "balanced_accuracy": 73.81,
+      "macro_precision": 84.42,
+      "macro_recall": 73.81,
+      "macro_f1": 76.74,
+      "weighted_f1": 84.5
+    },
+    {
+      "rank": 5,
+      "model": "XGBoost - Original",
+      "accuracy": 83.64,
+      "balanced_accuracy": 70.44,
+      "macro_precision": 88.34,
+      "macro_recall": 70.44,
+      "macro_f1": 73.74,
+      "weighted_f1": 82.26
+    },
+    {
+      "rank": 6,
+      "model": "Genetic Programming (GP)",
+      "accuracy": 73.64,
+      "balanced_accuracy": 54.56,
+      "macro_precision": 48.57,
+      "macro_recall": 54.56,
+      "macro_f1": 51.39,
+      "weighted_f1": 69.43
+    }
+  ]
+}

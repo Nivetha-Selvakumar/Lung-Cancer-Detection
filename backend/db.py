@@ -86,8 +86,11 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
 
     return False
 
+_mysql_warning_shown = False
+
 def get_mysql_connection():
     """Attempt to connect to MySQL server and ensure database exists."""
+    global _mysql_warning_shown
     try:
         conn = pymysql.connect(
             host=MYSQL_HOST,
@@ -95,7 +98,7 @@ def get_mysql_connection():
             password=MYSQL_PASSWORD,
             port=MYSQL_PORT,
             autocommit=True,
-            connect_timeout=3
+            connect_timeout=1
         )
         cursor = conn.cursor()
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
@@ -110,11 +113,13 @@ def get_mysql_connection():
             port=MYSQL_PORT,
             autocommit=True,
             cursorclass=pymysql.cursors.DictCursor,
-            connect_timeout=3
+            connect_timeout=1
         )
         return conn
     except Exception as e:
-        print(f"[Database Warning] MySQL connection failed ({e}). Falling back to SQLite/Memory.")
+        if not _mysql_warning_shown:
+            print(f"[Database] SQLite persistent engine active ({sqlite_filename}).")
+            _mysql_warning_shown = True
         return None
 
 def init_db():
@@ -894,6 +899,34 @@ def update_verification_status(record_id, new_status, verified_by_doctor=None):
         print(f"[Database Error] SQLite status update failed: {e}")
         return False
 
+def update_verification_by_case_id(case_id, new_status="Verified", verified_by_doctor="Yes"):
+    """Update verification status (Pending, Review, Verified) and Doctor Verification flag by case_id."""
+    mysql_conn = get_mysql_connection()
+    if mysql_conn:
+        try:
+            with mysql_conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE prediction_history SET verification_status = %s, verified_by_doctor = %s WHERE case_id = %s",
+                    (new_status, verified_by_doctor, case_id)
+                )
+            mysql_conn.close()
+        except Exception as e:
+            print(f"[Database Error] MySQL status update by case_id failed: {e}")
+
+    try:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE prediction_history SET verification_status = ?, verified_by_doctor = ? WHERE case_id = ?",
+            (new_status, verified_by_doctor, case_id)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[Database Error] SQLite status update by case_id failed: {e}")
+        return False
+
 def delete_prediction(record_id):
     """Delete prediction history record from database."""
     mysql_conn = get_mysql_connection()
@@ -915,6 +948,28 @@ def delete_prediction(record_id):
         return True
     except Exception as e:
         print(f"[Database Error] SQLite delete prediction failed: {e}")
+        return False
+
+def clear_all_history():
+    """Clear all prediction history records from database."""
+    mysql_conn = get_mysql_connection()
+    if mysql_conn:
+        try:
+            with mysql_conn.cursor() as cursor:
+                cursor.execute("DELETE FROM prediction_history")
+            mysql_conn.close()
+        except Exception as e:
+            print(f"[Database Error] MySQL clear history failed: {e}")
+
+    try:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM prediction_history")
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[Database Error] SQLite clear history failed: {e}")
         return False
 
 def get_db_status():

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ChevronDown, Calendar, Eye, Trash2, RefreshCw, X } from 'lucide-react';
+import { Search, ChevronDown, Calendar, Eye, Trash2, RefreshCw, X, CheckCircle2 } from 'lucide-react';
 
 interface HistoryRecord {
   id: number;
@@ -73,6 +73,22 @@ export const HistoryView: React.FC = () => {
       });
   };
 
+  const handleClearAllHistory = () => {
+    if (!window.confirm('Are you sure you want to clear all prediction history records for a fresh test?')) {
+      return;
+    }
+    fetch('/api/history/clear-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setRecords([]);
+        }
+      });
+  };
+
   const handleDeleteRecord = (id: number) => {
     if (!window.confirm('Are you sure you want to delete this prediction record from the database?')) {
       return;
@@ -107,7 +123,7 @@ export const HistoryView: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header Bar matching UI screenshot */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
             Prediction History
@@ -116,27 +132,50 @@ export const HistoryView: React.FC = () => {
             View past cases, predictions and doctor verification status
           </p>
         </div>
-        <button
-          onClick={fetchHistory}
-          title="Refresh prediction history from database"
-          style={{
-            background: '#ffffff',
-            color: '#4f46e5',
-            border: '1px solid #c7d2fe',
-            padding: '0.55rem 1.1rem',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-            transition: 'all 0.2s'
-          }}
-        >
-          <RefreshCw size={16} /> Refresh
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <button
+            onClick={handleClearAllHistory}
+            title="Clear all prediction history records from database"
+            style={{
+              background: '#ffffff',
+              color: '#dc2626',
+              border: '1px solid #fecaca',
+              padding: '0.55rem 1rem',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Trash2 size={16} /> Clear All History
+          </button>
+          <button
+            onClick={fetchHistory}
+            title="Refresh prediction history from database"
+            style={{
+              background: '#ffffff',
+              color: '#4f46e5',
+              border: '1px solid #c7d2fe',
+              padding: '0.55rem 1.1rem',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <RefreshCw size={16} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter Bar matching uploaded screenshot */}
@@ -324,8 +363,35 @@ export const HistoryView: React.FC = () => {
                       <td style={{ padding: '0.9rem 1.25rem', fontWeight: 700, color: '#334155', fontSize: '0.88rem' }}>
                         {confPct}%
                       </td>
-                      <td style={{ padding: '0.9rem 1.25rem', fontSize: '0.88rem', color: rec.verified_by_doctor === 'Yes' ? '#16a34a' : '#64748b', fontWeight: 600 }}>
-                        {rec.verified_by_doctor === 'Yes' ? 'Yes' : 'No'}
+                      <td style={{ padding: '0.9rem 1.25rem' }}>
+                        {rec.verified_by_doctor === 'Yes' ? (
+                          <span style={{
+                            background: '#ecfdf5',
+                            color: '#059669',
+                            border: '1px solid #a7f3d0',
+                            padding: '0.2rem 0.65rem',
+                            borderRadius: '12px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}>
+                            <CheckCircle2 size={13} /> Yes
+                          </span>
+                        ) : (
+                          <span style={{
+                            background: '#f8fafc',
+                            color: '#64748b',
+                            border: '1px solid #e2e8f0',
+                            padding: '0.2rem 0.65rem',
+                            borderRadius: '12px',
+                            fontWeight: 600,
+                            fontSize: '0.8rem'
+                          }}>
+                            No
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: '0.9rem 1.25rem' }}>
                         <button
